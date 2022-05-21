@@ -1,0 +1,33 @@
+<h2>NUI</h2>
+
+<button id="create">XAML</button>
+<button id="cancel">Cancel</button>
+<div id="xaml-code">...</div>
+<script>
+
+  window.onload = () => {
+    document.getElementById('create').onclick = () => {
+      const type = 'to-xaml' 
+      parent.postMessage({ pluginMessage: { type } }, '*')
+    }
+
+    const codeElement = document.getElementById('xaml-code')
+
+    window.onmessage = (event) => {
+      const { pluginMessage } = event.data
+
+      if (pluginMessage.type == 'xaml-code') {
+        const { xamlCode } = pluginMessage    
+
+        console.log(xamlCode)
+        codeElement.innerText = xamlCode
+      }
+    }
+
+    document.getElementById('cancel').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
+    }
+
+  }
+
+</script>

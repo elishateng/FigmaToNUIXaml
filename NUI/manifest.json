@@ -1,0 +1,10 @@
+{
+  "name": "NUI",
+  "id": "1109709995079869336",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": [
+    "figma"
+  ],
+  "ui": "ui.html"
+}
