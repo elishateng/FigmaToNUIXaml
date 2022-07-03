@@ -20,7 +20,8 @@ const XAML_TMPL =
 </ContentPage>
 `
 
-figma.showUI(__html__);
+figma.showUI(__html__, {width: 300, height: 450, title: "FigmaToNUIXamlPlugin"}
+);
 
 class Spec {
   toXAML:Function  

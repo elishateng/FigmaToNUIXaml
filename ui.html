@@ -1,12 +1,21 @@
-<h2>NUI</h2>
+<h2>Figma to NUI Xaml</h2>
+<p style="color:gray; margin-bottom:5px; font-size:15px; font-weight: bold;">Target Page</p>
+<p style="color:black; margin-top:10px; margin-bottom:5px; font-size:12px; font-weight: bold;">Page 2</p>
 
-<button id="create">XAML</button>
-<button id="cancel">Cancel</button>
-<div id="xaml-code">...</div>
+<p style="color:gray; margin-top:20px; margin-bottom:5px; font-size:15px; font-weight: bold;">NUI Xaml Code</p>
+<textarea id="xaml-code" rows="10" cols="37">Result Code Here</textarea>
+<button id="ConvertButton" style="width:65%; flex:1; padding: 5px; margin-top: 10px; background-color:skyblue; color:black; border:none; border-radius: 5px; text-decoration: none; ">Convert Figma to NUI Xaml</button>
+<button id="CancelButton" style="width:33%; flex:1; padding: 5px; margin-top: 10px; background-color:orange; color:white; border:none; border-radius: 5px; text-decoration: none;">Clean</button>
+
+<p style="color:gray; margin-top:20px; margin-bottom:5px; font-size:15px; font-weight: bold;">Export as Xaml File</p>
+<label style="width:35%; color:gray; font-size:12px; flex:1; box-sizing: border-box;">File Name : </label>
+<input type="text" style="width: 75%; flex: 1; box-sizing: border-box;">
+<button id="ExportButton" style="width:100%; flex:1; padding: 5px; margin-top: 5px; background-color:lightseagreen; color:black; border:none; border-radius: 5px; text-decoration: none; ">Export</button>
+
 <script>
 
   window.onload = () => {
-    document.getElementById('create').onclick = () => {
+    document.getElementById('ConvertButton').onclick = () => {
       const type = 'to-xaml' 
       parent.postMessage({ pluginMessage: { type } }, '*')
     }
@@ -24,8 +33,9 @@
       }
     }
 
-    document.getElementById('cancel').onclick = () => {
+    document.getElementById('CancelButton').onclick = () => {
       parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
+      codeElement.innerText = "Result Code Here"
     }
 
   }
