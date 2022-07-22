@@ -1,3 +1,38 @@
+import { exportAs } from './code/exporter';
+
+
+// This shows the HTML page in "ui.html".
+//figma.showUI(__html__, { visible: true, width: 240, height: 160 });
+
+figma.showUI(__html__, {width: 300, height: 450, title: "FigmaToNUIXamlPlugin"}
+);
+
+/*
+// Calls to "parent.postMessage" from within the HTML page will trigger this
+// callback. The callback will be passed the "pluginMessage" property of the posted message.
+figma.ui.onmessage = async (msg) => {
+  switch (msg.type) {
+  case 'export':
+    figma.notify('Exporting files...');
+    const convention: string = msg.value;
+
+    // Resume after 1 second to allow UI to re-render.
+    setTimeout(() => {
+      exportAs(convention)
+      .then(res => console.log(res));
+    }, 1);
+    break;
+
+  default:
+    console.log('Closing Plugin!');
+    figma.notify('Done!');
+    figma.closePlugin();
+  }
+};
+*/
+
+
+
 const CODE_KEYWORD = '__CODE__'
 const XAML_TMPL = 
 `
@@ -183,11 +218,12 @@ figma.ui.onmessage = msg => {
 
     const code = generateComponentCode(layer)
     const xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
+    console.log(xamlCode);
 
     figma.ui.postMessage({
       type: 'xaml-code',
-      xamlCode
-    })
+      value: '',
+      filename: xamlCode
+    });
   }
 };
-
