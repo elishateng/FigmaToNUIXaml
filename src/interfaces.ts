@@ -6,6 +6,7 @@ export interface UISelectOption {
   export interface UIState {
     loading: boolean;
     convention: string;
+    xamlCode: string;
   }
   
   export interface ExportableBytes {

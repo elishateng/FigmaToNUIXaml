@@ -6,6 +6,8 @@ import { UISelectOption as Option, UIState as State} from "./interfaces";
 import { CONVENTIONS, ORIGINAL } from './constants';
 import { compressExport } from "./ui/exporter";
 
+import JSZip from 'jszip';
+
 import './style.css';
 
 declare function require(path: string): any
@@ -38,13 +40,23 @@ class App extends React.Component<{}, State> {
 
     this.state = {
       loading: false,
-      convention: ORIGINAL
+      convention: ORIGINAL,
+      xamlCode: 'good'
     }
 
     this.onSelect = this.onSelect.bind(this);
     this.onExport = this.onExport.bind(this);
 
-    window.addEventListener("message", this.handleMessage);
+    window.addEventListener("message", this.handleMessage.bind(this));
+  }
+
+
+  reactfunction (){
+    console.log('good 777');
+  }
+
+  applyXamlCode = (value : string) => {
+    this.setState({xamlCode : value});
   }
 
   handleMessage(event) {
@@ -53,6 +65,7 @@ class App extends React.Component<{}, State> {
     if (!msg) return;
   
     if (msg.type === 'exportResults') {
+      console.log('ui export !!!!');
       compressExport(msg.value, msg.filename)
         .then(() => {
           parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
@@ -61,12 +74,30 @@ class App extends React.Component<{}, State> {
   
     if (msg.type === 'xaml-code') {
 
+      /*
+      let zip = new JSZip();
+      zip.file('hello.txt', 'good');
+      zip.generateAsync({ type: 'blob' })
+      .then((content) => {
+        const blobURL = window.URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.className = 'button button-primary';
+        link.href = blobURL;
+        link.download = `good.zip`
+        link.click()
+        link.setAttribute('download', `good2.zip`);
+      })
+      */
+
         //const codeElement = document.getElementById('mytextarea');
         //codeElement.innerText = msg.filename;
 
         console.log('ui kth');
         console.log('ui xaml'+ msg.filename);  
         xamlCode = msg.filename;      
+        this.applyXamlCode(xamlCode);
+        //this.reactfunction();
+       
     }
   }
 
@@ -74,16 +105,17 @@ class App extends React.Component<{}, State> {
     this.setState({ convention: value });
   }
 
-  onTextChange() {
+  onTextChange(value : string) {
       console.log('kth text area is changed!');
-      console.log(xamlCode);
-      this.forceUpdate();
+      console.log(xamlCode)
+  //    this.forceUpdate();
   }
 
   onExport() {
     this.setState({ loading: true });
     const pluginMessage = { type: 'export', value: this.state.convention };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
+    this.reactfunction();
   }
 
   onToXaml() {
@@ -111,7 +143,7 @@ class App extends React.Component<{}, State> {
           <button className="brand" onClick={this.onToXaml}>
           Create
           </button>
-          <TextArea value = {xamlCode} onChange={this.onTextChange}/>
+          <TextArea id="xamlCodeArea" value = {this.state.xamlCode} onChange={this.onTextChange}/>
         </div>
       </>
     );

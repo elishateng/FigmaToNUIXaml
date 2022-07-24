@@ -7,6 +7,8 @@ const toBuffer = (ary: Uint8Array): ArrayBuffer => {
 
 export const compressExport = async (exportableBytes: ExportableBytes[], filename: string): Promise<any> => {
   return new Promise(res => {
+
+    console.log('kth compressExport!');
     let zip = new JSZip();
 
     for (let data of exportableBytes) {

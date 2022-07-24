@@ -22,6 +22,10 @@
     margin: auto;
     text-align: center;
   }
+
+  #xamlCodeArea {
+    height : 150px;
+  }
   
   .loader {
     display: inline-block;
