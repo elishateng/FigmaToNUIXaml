@@ -7,6 +7,7 @@ export interface UISelectOption {
     loading: boolean;
     convention: string;
     xamlCode: string;
+    fileName: string;
   }
   
   export interface ExportableBytes {
