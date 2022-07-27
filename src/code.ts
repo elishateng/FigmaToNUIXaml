@@ -1,4 +1,5 @@
 import { exportAs } from './code/exporter';
+import { v1 as uuid } from 'uuid';
 
 
 // This shows the HTML page in "ui.html".
@@ -89,9 +90,12 @@ class Component {
       return code
     })
 
-    const componentCode = `<${this.name}
-      x:Name="undefined"
-      ${atttrbuteCodes.join('\n')}
+    let id = uuid();
+    let newId = id.replace(/-/gi,'');
+    const componentCode = `
+    <${this.name}
+      x:Name="undefined${newId}"
+      ${atttrbuteCodes.join('\n      ')}
     />`
 
     return componentCode
@@ -113,6 +117,19 @@ class Button extends Component{
   position2D?:Position
 }
 
+class TextLabel extends Component {
+  name:String = "TextLabel"
+
+  sizeWidth:number
+  sizeHeight:number
+  pointSize:number
+
+  text:string
+  textColor:string
+
+  position2D?:Position
+}
+
 class Layout{
 
 }
@@ -125,13 +142,16 @@ class LinearLayout extends Layout {
 
 class View extends Component {
   name:String = "View"
+  backgroundColor:string
   widthSpecification:number
-  heightSpecification:number  
+  heightSpecification:number
   layout:LinearLayout
   childrenNode:SceneNode[] = []
 
   toXaml(): string {
 
+    let id = uuid();
+    let newId = id.replace(/-/gi,'');
     let childrenCodeSnippet = ''
     this.childrenNode.forEach((childNode) => {
       const code = generateComponentCode(childNode)
@@ -140,16 +160,18 @@ class View extends Component {
     })
 
     const componentCode = `<${this.name}
-      x:Name="undefined"
+      x:Name="undefined${newId}"
       WidthSpecification="${this.widthSpecification}"
-      HeightSpecification="${this.heightSpecification}"    
+      HeightSpecification="${this.heightSpecification}"
+      BackgroundColor="${this.backgroundColor}"
+      >
       
       <View.Layout>
         <LinearLayout LinearOrientation="${this.layout.linearOrientation}" LinearAlignment="${this.layout.linaerAligment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />
       </View.Layout>
 
       ${childrenCodeSnippet}
-    />`
+    </View>`
 
     return componentCode
   }
@@ -157,18 +179,31 @@ class View extends Component {
 
 const NUI_COMPONENTS = {
   'Button': Button,
-  'View': View
+  'View': View,
+  'TextLabel' : TextLabel
 }
 
 const toHex = ({r,g,b}) => "#" + ((1 << 24) + ((r * 255 | 0) << 16) + ((g * 255 | 0) << 8) + (b * 255 | 0)).toString(16).slice(1)
 
 const generateComponentCode = (layer:SceneNode):string => {
 
+  console.log('kth generate ' + layer.type);
+
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
     const componentType = instanceNode.mainComponent.name
-    
-    if (componentType == 'Button') {
+
+    if (componentType == 'TextLabel') {
+      console.log('TextLabel!!!');
+      const textLayer:TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
+      const textLabel = new TextLabel()
+      textLabel.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
+      textLabel.text = textLayer.characters;
+
+      const xaml = textLabel.toXaml();
+      return xaml;
+    }
+    else if (componentType == 'Button') {
       const textLayer:TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
       const backgroundLayer:RectangleNode = (instanceNode.findOne(child => child.type == 'RECTANGLE') as RectangleNode)
   
@@ -176,7 +211,7 @@ const generateComponentCode = (layer:SceneNode):string => {
       button.sizeWidth = instanceNode.width
       button.sizeHeight = instanceNode.height
       button.text = textLayer.characters
-      button.pointSize = parseInt(textLayer.fontSize.toString())
+      button.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
       button.textColor = toHex(textLayer.fills[0].color)
       
       button.backgroundColor = toHex(backgroundLayer.fills[0].color)
@@ -191,12 +226,15 @@ const generateComponentCode = (layer:SceneNode):string => {
       return xaml
     }
   } else if (layer.type == 'FRAME') {
+
+    const frameLayer:FrameNode = layer as FrameNode;
     const view = new View()
     view.widthSpecification = layer.width
     view.heightSpecification = layer.height
     view.layout = new LinearLayout()
     view.layout.cellPadding = layer.itemSpacing
     view.layout.linaerAligment = 'Center'
+    view.backgroundColor = toHex(frameLayer.fills[0].color);
 
     if (layer.layoutMode == 'VERTICAL') {
       view.layout.linearOrientation = 'Vertical'
@@ -218,7 +256,7 @@ figma.ui.onmessage = msg => {
 
     const code = generateComponentCode(layer)
     const xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
-    console.log(xamlCode);
+    //console.log(xamlCode);
 
     figma.ui.postMessage({
       type: 'xaml-code',

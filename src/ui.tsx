@@ -74,7 +74,7 @@ class App extends React.Component<{}, State> {
         //codeElement.innerText = msg.filename;
 
         console.log('ui kth');
-        console.log('ui xaml'+ msg.filename);  
+        //console.log('ui xaml'+ msg.filename);
         xamlCode = msg.filename;      
         this.applyXamlCode(xamlCode);
     }
@@ -85,7 +85,7 @@ class App extends React.Component<{}, State> {
 
   onTextChange(value : string) {
       console.log('kth text area is changed!');
-      console.log(xamlCode)
+      //console.log(xamlCode)
   }
 
   onExport() {
@@ -93,8 +93,11 @@ class App extends React.Component<{}, State> {
     //const pluginMessage = { type: 'export', value: this.state.convention };
     //parent.postMessage({ pluginMessage: pluginMessage }, '*');
 
+    let generatedCode = `${this.state.xamlCode}`;
+    let refinedCode = generatedCode.substring(1);
+
     let zip = new JSZip();
-    zip.file('layout1.xaml', 'dummy text');
+    zip.file('layout.xaml', refinedCode);
     zip.generateAsync({ type: 'blob' })
     .then((content) => {
       const blobURL = window.URL.createObjectURL(content);

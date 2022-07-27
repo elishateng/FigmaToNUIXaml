@@ -13,7 +13,8 @@
     "jszip": "^3.2.2",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
-    "styled-components": "^5.0.1"
+    "styled-components": "^5.0.1",
+    "uuid": "*"
   },
   "devDependencies": {
     "@figma/plugin-typings": "*",
@@ -21,6 +22,7 @@
     "@types/jszip": "^3.1.7",
     "@types/react": "^16.9.23",
     "@types/react-dom": "^16.9.5",
+    "@types/uuid": "^8.3.4",
     "css-loader": "^3.4.2",
     "html-webpack-inline-source-plugin": "0.0.10",
     "html-webpack-plugin": "^3.2.0",
