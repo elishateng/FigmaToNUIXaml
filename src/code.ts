@@ -4,7 +4,6 @@ import { v1 as uuid } from 'uuid';
 
 // This shows the HTML page in "ui.html".
 //figma.showUI(__html__, { visible: true, width: 240, height: 160 });
-
 figma.showUI(__html__, {width: 300, height: 450, title: "FigmaToNUIXamlPlugin"}
 );
 
@@ -31,8 +30,6 @@ figma.ui.onmessage = async (msg) => {
   }
 };
 */
-
-
 
 const CODE_KEYWORD = '__CODE__'
 const XAML_TMPL = 
@@ -256,12 +253,20 @@ figma.ui.onmessage = msg => {
 
     const code = generateComponentCode(layer)
     const xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
-    //console.log(xamlCode);
 
     figma.ui.postMessage({
       type: 'xaml-code',
       value: '',
       filename: xamlCode
     });
+
+  }
+  else if(msg.type == 'to-png') {
+    console.log('kth to-png');
+    exportAs('Original')
+    //const nodes = figma.currentPage.selection;
+  }
+  else{
+    figma.notify('Done!');
   }
 };

@@ -51,7 +51,6 @@ export async function exportAs(convention: string): Promise<string> {
     }
 
     const exportName = inConvention(convention, name);
-    console.log(`Exporting "${name}" as "${exportName}"`);
 
     for (let setting of settings) {
       const bytes = await node.exportAsync(setting);
@@ -65,7 +64,6 @@ export async function exportAs(convention: string): Promise<string> {
     };
   };
 
-  figma.showUI(__html__, { visible: false });
   figma.ui.postMessage({
     type: 'exportResults',
     value: exportableBytes,

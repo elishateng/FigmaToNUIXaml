@@ -14,26 +14,6 @@ declare function require(path: string): any
 
 let xamlCode = "hello";
 
-/*
-window.onmessage = (event) => {
-  const msg = event.data.pluginMessage;
-  if (!msg) return;
-
-  if (msg.type === 'exportResults') {
-    compressExport(msg.value, msg.filename)
-      .then(() => {
-        parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
-      });
-  }
-
-  if (msg.type === 'xaml-code') {
-      console.log('ui kth');
-      console.log('ui xaml'+ msg.filename);
-      xamlCode = 'good';
-  }
-}
-*/
-
 class App extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
@@ -47,6 +27,7 @@ class App extends React.Component<{}, State> {
 
     this.onSelect = this.onSelect.bind(this);
     this.onExport = this.onExport.bind(this);
+    this.onExportPng = this.onExportPng.bind(this);
     this.onFileNameChanged = this.onFileNameChanged.bind(this);
     window.addEventListener("message", this.handleMessage.bind(this));
   }
@@ -56,27 +37,25 @@ class App extends React.Component<{}, State> {
   }
 
   handleMessage(event) {
-    console.log('good!!!!!!!!!!');
     const msg = event.data.pluginMessage;
     if (!msg) return;
   
     if (msg.type === 'exportResults') {
-      console.log('ui export !!!!');
+      //this.setState({ loading: false });
+      console.log('kth win message : export results')
       compressExport(msg.value, msg.filename)
         .then(() => {
           parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
         });
     }
-  
+
     if (msg.type === 'xaml-code') {
 
         //const codeElement = document.getElementById('mytextarea');
         //codeElement.innerText = msg.filename;
 
-        console.log('ui kth');
-        //console.log('ui xaml'+ msg.filename);
-        xamlCode = msg.filename;      
-        this.applyXamlCode(xamlCode);
+        console.log('kth win mesage : export xaml code');
+        this.applyXamlCode(msg.filename);
     }
   }
 
@@ -85,7 +64,6 @@ class App extends React.Component<{}, State> {
 
   onTextChange(value : string) {
       console.log('kth text area is changed!');
-      //console.log(xamlCode)
   }
 
   onExport() {
@@ -108,6 +86,12 @@ class App extends React.Component<{}, State> {
       link.click()
       link.setAttribute('download', `${this.state.fileName}.zip`);
     })
+  }
+
+  onExportPng() {
+    console.log('kth onExportPng');
+    const pluginMessage = { type: 'to-png' };
+    parent.postMessage({ pluginMessage: pluginMessage }, '*');
   }
 
   onToXaml() {
@@ -139,6 +123,7 @@ class App extends React.Component<{}, State> {
           <Text id="text"> File Name : </Text>
           <input id="input" onChange={this.onFileNameChanged}/>
           <Button id="export" variant="secondary" fullWidth onClick={this.onExport}>Export as NUI Xaml</Button>
+          <Button id="export" variant="secondary" fullWidth onClick={this.onExportPng}>Export as PNG</Button>
         </div>
       </>
     );
