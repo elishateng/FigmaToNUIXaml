@@ -27,7 +27,7 @@ export const compressExport = async (exportableBytes: ExportableBytes[], filenam
         link.href = blobURL;
         link.download = `${filename}.zip`
         link.click()
-        link.setAttribute('download', `${name}.zip`);
+        link.setAttribute('download', `${filename}.zip`);
         res();
       })
   })

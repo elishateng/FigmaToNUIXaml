@@ -1,4 +1,4 @@
-import { exportAs } from './code/exporter';
+import { exportAs, exportPNG } from './code/exporter';
 import { v1 as uuid } from 'uuid';
 
 
@@ -114,6 +114,11 @@ class Button extends Component{
   position2D?:Position
 }
 
+class ImageView extends Component {
+  name:String = "ImageView"
+
+}
+
 class TextLabel extends Component {
   name:String = "TextLabel"
 
@@ -177,7 +182,8 @@ class View extends Component {
 const NUI_COMPONENTS = {
   'Button': Button,
   'View': View,
-  'TextLabel' : TextLabel
+  'TextLabel' : TextLabel,
+  'ImageView' : ImageView,
 }
 
 const toHex = ({r,g,b}) => "#" + ((1 << 24) + ((r * 255 | 0) << 16) + ((g * 255 | 0) << 8) + (b * 255 | 0)).toString(16).slice(1)
@@ -190,7 +196,10 @@ const generateComponentCode = (layer:SceneNode):string => {
     let instanceNode = (layer as InstanceNode)
     const componentType = instanceNode.mainComponent.name
 
-    if (componentType == 'TextLabel') {
+    if (componentType == 'ImageView') {
+
+    }
+    else if (componentType == 'TextLabel') {
       console.log('TextLabel!!!');
       const textLayer:TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
       const textLabel = new TextLabel()
@@ -259,11 +268,36 @@ figma.ui.onmessage = msg => {
       value: '',
       filename: xamlCode
     });
-
   }
   else if(msg.type == 'to-png') {
     console.log('kth to-png');
-    exportAs('Original')
+    //export parent and child components as png file
+    /*
+    const nodes = figma.currentPage.selection;
+
+    for (const node of nodes) {
+      console.log('kth node type : ' + node.type);
+      if (node.type === "COMPONENT_SET") {
+        const children = node.children;
+
+        for(const child of children) {
+          console.log('kth component set child name : ' + child.name);
+
+        }
+      }
+      else if(node.type === "FRAME") {
+        const children = node.children;
+        for(const child of children) {
+          console.log('kth frame child name : ' + child.name);
+        }
+
+      }
+    }
+    */
+
+    exportPNG();
+
+    //exportAs('Original')
     //const nodes = figma.currentPage.selection;
   }
   else{

@@ -72,3 +72,81 @@ export async function exportAs(convention: string): Promise<string> {
 
   return new Promise(res => res('Complete export.'));
 }
+
+function exportPNGFile(){
+
+}
+
+export async function exportPNG(): Promise<string> {
+
+  const compSet = figma.root.findAll((n) => {
+    let isComponent = false;
+    return (n.type === "COMPONENT" && n.parent.type != "COMPONENT_SET" || n.type === "COMPONENT_SET")}
+    );
+  /*
+  const compSet = figma.root.findAllWithCriteria({
+    types : [ "COMPONENT" as any | "COMPONENT_SET" as any]
+  });
+  */
+
+  console.log(compSet);
+
+  for (let c of compSet)
+  {
+    console.log('compSet: ' + c.name);
+  }
+
+  const nodes = figma.currentPage.selection;
+  if (!isValidSelection(nodes)) {
+    return new Promise(res => {
+      res("Can't export nothing");
+      figma.closePlugin();
+    });
+  }
+
+  let exportableBytes: ExportableBytes[] = [];
+  for (let node of nodes) {
+    let settings: readonly ExportSettings[];
+    const { name, exportSettings } = node;
+
+    if(node.type ==="FRAME"){
+      const children = node.children;
+      let i = 0;
+      for (const child of children)
+      {
+        if (child.type ==="INSTANCE") {
+          console.log('instance : ' + child.type);
+          let comp = child.mainComponent;
+          console.log('comp type : ' + comp.type);
+        }
+
+        if (exportSettings.length === 0) {
+          settings = [{ format: "PNG", suffix: '', constraint: { type: "SCALE", value: 1 }, contentsOnly: true }];
+        } else {
+          settings = exportSettings;
+        }
+
+        for (let setting of settings) {
+          const bytes = await child.exportAsync(setting);
+          exportableBytes.push({
+            name: "temp" + i,
+            setting: setting,
+            bytes: bytes,
+            blobType: formatToBlobType(setting.format),
+            extension: formatToExtension(setting.format)
+          });
+        };
+
+        i++;
+      }
+    }
+  };
+
+  figma.ui.postMessage({
+    type: 'exportResults',
+    value: exportableBytes,
+    filename: exportFilename("temp")
+  });
+
+  return new Promise(res => res('Complete exportPNG.'));
+}
