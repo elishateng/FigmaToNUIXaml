@@ -93,7 +93,15 @@ export async function exportPNG(): Promise<string> {
 
   for (let c of compSet)
   {
-    console.log('compSet: ' + c.name);
+    if (c.type === "COMPONENT_SET"){
+       console.log('compSet ' + c.name);
+       console.log(c);
+    }
+    else
+    {
+      console.log('comp ' + c.name);
+      console.log(c);
+    }
   }
 
   const nodes = figma.currentPage.selection;
@@ -117,7 +125,8 @@ export async function exportPNG(): Promise<string> {
         if (child.type ==="INSTANCE") {
           console.log('instance : ' + child.type);
           let comp = child.mainComponent;
-          console.log('comp type : ' + comp.type);
+          //console.log('comp type : ' + comp.type + ' ' + comp.name + ' ' + comp.parent.type + ' ' + comp.parent.name);
+          //console.log(comp);
         }
 
         if (exportSettings.length === 0) {

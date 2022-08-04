@@ -74,6 +74,11 @@ class BorderRadius implements Spec{
   toXAML = () => `${this.leftTop},${this.rightTop},${this.leftBottom},${this.rightBottom}`
 }
 
+class ResourceUrl implements Spec {
+  path:string
+  toXAML = () => `${this.path}`
+}
+
 
 class Component {
   name:String
@@ -116,7 +121,9 @@ class Button extends Component{
 
 class ImageView extends Component {
   name:String = "ImageView"
-
+  sizeWidth:number
+  sizeHeight:number
+  resourceUrl:ResourceUrl
 }
 
 class TextLabel extends Component {
@@ -197,7 +204,16 @@ const generateComponentCode = (layer:SceneNode):string => {
     const componentType = instanceNode.mainComponent.name
 
     if (componentType == 'ImageView') {
+      const imageView = new ImageView();
+      imageView.sizeWidth = instanceNode.width;
+      imageView.sizeHeight = instanceNode.height;
 
+      const url = new ResourceUrl();
+      url.path = "*Resource*/image/a.png";
+      imageView.resourceUrl = url;
+
+      const xaml = imageView.toXaml();
+      return xaml;
     }
     else if (componentType == 'TextLabel') {
       console.log('TextLabel!!!');
