@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { Select, Button, SectionTitle, TextArea, Input, Text} from 'figma-styled-components';
-import { UISelectOption as Option, UIState as State} from "./interfaces";
+import { UISelectOption as Option, UIState as State, ExportableBytes} from "./interfaces";
 import { CONVENTIONS, ORIGINAL } from './constants';
-import { compressExport } from "./ui/exporter";
+import { compressExport, toBuffer } from "./ui/exporter";
 
 import JSZip from 'jszip';
 
@@ -12,9 +12,9 @@ import './style.css';
 
 declare function require(path: string): any
 
-let xamlCode = "hello";
-
 class App extends React.Component<{}, State> {
+  myExportables:ExportableBytes[];
+
   constructor(props: {}) {
     super(props);
 
@@ -40,13 +40,20 @@ class App extends React.Component<{}, State> {
     const msg = event.data.pluginMessage;
     if (!msg) return;
   
+    //[Figma UI : Exports Project]
     if (msg.type === 'exportResults') {
-      //this.setState({ loading: false });
-      console.log('kth win message : export results')
+
+      this.myExportables = msg.value;
+      //let myExportables : ExportableBytes[] = msg.value;
+      console.log('kth ui : ' + this.myExportables.length + ' ' + msg.filename);
+      console.log('kth win message : export results');
+
+      /*
       compressExport(msg.value, msg.filename)
         .then(() => {
           parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
         });
+        */
     }
 
     if (msg.type === 'xaml-code') {
@@ -76,6 +83,16 @@ class App extends React.Component<{}, State> {
 
     let zip = new JSZip();
     zip.file('layout.xaml', refinedCode);
+    let imgFolder = zip.folder('images');
+
+    for (let data of this.myExportables) {
+      const { name, setting, bytes, blobType, extension } = data;
+      const buffer = toBuffer(bytes);
+
+      let blob = new Blob([buffer], { type: blobType })
+      imgFolder.file(`${name}${setting.suffix}${extension}`, blob, { base64: true });
+    }
+
     zip.generateAsync({ type: 'blob' })
     .then((content) => {
       const blobURL = window.URL.createObjectURL(content);
@@ -89,7 +106,6 @@ class App extends React.Component<{}, State> {
   }
 
   onExportPng() {
-    console.log('kth onExportPng');
     const pluginMessage = { type: 'to-png' };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
   }

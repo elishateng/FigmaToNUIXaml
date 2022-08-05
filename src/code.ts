@@ -1,5 +1,7 @@
 import { exportAs, exportPNG } from './code/exporter';
 import { v1 as uuid } from 'uuid';
+import { ExportableBytes } from "./interfaces";
+import {XAML_TMPL2 as mytemplate} from './code/template'
 
 
 // This shows the HTML page in "ui.html".
@@ -30,6 +32,11 @@ figma.ui.onmessage = async (msg) => {
   }
 };
 */
+
+let mydata : number = 0;
+let globalInt:number[] = [];
+let XamlExportables : ExportableBytes[] = [];
+let xamlCode:string = '';
 
 const CODE_KEYWORD = '__CODE__'
 const XAML_TMPL = 
@@ -195,7 +202,32 @@ const NUI_COMPONENTS = {
 
 const toHex = ({r,g,b}) => "#" + ((1 << 24) + ((r * 255 | 0) << 16) + ((g * 255 | 0) << 8) + (b * 255 | 0)).toString(16).slice(1)
 
+async function exportXaml(node : InstanceNode) {
+  let setting : ExportSettings = { format: "PNG", suffix: '', constraint: { type: "SCALE", value: 1 }, contentsOnly: true };
+
+  const bytes = await node.exportAsync(setting);
+  XamlExportables.push({
+    name: "image1",
+    setting: setting,
+    bytes: bytes,
+    blobType: 'image/png',
+    extension: '.png'
+  });
+
+  console.log('kth in generated ' + XamlExportables.length + ' ' + globalInt);
+}
+
+async function mytest()
+{
+  mydata = 2;
+  console.log('kth mytest ' + mydata);
+}
+
 const generateComponentCode = (layer:SceneNode):string => {
+  console.log(mytemplate);
+  console.log('kth mytest === ' + mydata);
+  mytest();
+  console.log('kth mytest ### ' + mydata);
 
   console.log('kth generate ' + layer.type);
 
@@ -209,8 +241,10 @@ const generateComponentCode = (layer:SceneNode):string => {
       imageView.sizeHeight = instanceNode.height;
 
       const url = new ResourceUrl();
-      url.path = "*Resource*/image/a.png";
+      url.path = "*Resource*/images/image1.png";
       imageView.resourceUrl = url;
+
+      exportXaml(instanceNode);
 
       const xaml = imageView.toXaml();
       return xaml;
@@ -274,10 +308,13 @@ const generateComponentCode = (layer:SceneNode):string => {
 
 figma.ui.onmessage = msg => {
   if (msg.type === 'to-xaml') {
-    const layer:any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
 
+    const layer:any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
     const code = generateComponentCode(layer)
-    const xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
+    xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
+
+    //const resource = generatedResource
+    //const csCode = generatedCSharpCode
 
     figma.ui.postMessage({
       type: 'xaml-code',
@@ -287,6 +324,8 @@ figma.ui.onmessage = msg => {
   }
   else if(msg.type == 'to-png') {
     console.log('kth to-png');
+
+//    console.log('global data ' + globalInt);
     //export parent and child components as png file
     /*
     const nodes = figma.currentPage.selection;
@@ -311,7 +350,15 @@ figma.ui.onmessage = msg => {
     }
     */
 
-    exportPNG();
+    //exportPNG(globalInt);
+
+    figma.ui.postMessage({
+      type: 'exportResults',
+      value: XamlExportables,
+      filename: xamlCode
+    });
+
+    console.log('global data ' + globalInt + ' ' + XamlExportables.length);
 
     //exportAs('Original')
     //const nodes = figma.currentPage.selection;

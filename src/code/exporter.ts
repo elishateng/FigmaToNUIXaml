@@ -77,7 +77,8 @@ function exportPNGFile(){
 
 }
 
-export async function exportPNG(): Promise<string> {
+export async function exportPNG(globalInt:number[]): Promise<string> {
+  globalInt.push(1);
 
   const compSet = figma.root.findAll((n) => {
     let isComponent = false;
