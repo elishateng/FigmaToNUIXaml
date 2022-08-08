@@ -1,7 +1,7 @@
 import { exportAs, exportPNG } from './code/exporter';
 import { v1 as uuid } from 'uuid';
 import { ExportableBytes } from "./interfaces";
-import {XAML_TMPL2 as mytemplate} from './code/template'
+import {CODE_KEYWORD, XAML_TMPL} from './code/template'
 
 
 // This shows the HTML page in "ui.html".
@@ -38,7 +38,9 @@ let globalInt:number[] = [];
 let XamlExportables : ExportableBytes[] = [];
 let xamlCode:string = '';
 
+/*
 const CODE_KEYWORD = '__CODE__'
+
 const XAML_TMPL = 
 `
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -59,6 +61,7 @@ const XAML_TMPL =
     </ContentPage.Content>
 </ContentPage>
 `
+*/
 
 figma.showUI(__html__, {width: 300, height: 450, title: "FigmaToNUIXamlPlugin"}
 );
@@ -213,23 +216,9 @@ async function exportXaml(node : InstanceNode) {
     blobType: 'image/png',
     extension: '.png'
   });
-
-  console.log('kth in generated ' + XamlExportables.length + ' ' + globalInt);
-}
-
-async function mytest()
-{
-  mydata = 2;
-  console.log('kth mytest ' + mydata);
 }
 
 const generateComponentCode = (layer:SceneNode):string => {
-  console.log(mytemplate);
-  console.log('kth mytest === ' + mydata);
-  mytest();
-  console.log('kth mytest ### ' + mydata);
-
-  console.log('kth generate ' + layer.type);
 
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
@@ -244,7 +233,9 @@ const generateComponentCode = (layer:SceneNode):string => {
       url.path = "*Resource*/images/image1.png";
       imageView.resourceUrl = url;
 
-      exportXaml(instanceNode);
+      exportXaml(instanceNode).then(()=>{
+        console.log('exportXaml : ' + XamlExportables.length);
+      });
 
       const xaml = imageView.toXaml();
       return xaml;
@@ -318,7 +309,7 @@ figma.ui.onmessage = msg => {
 
     figma.ui.postMessage({
       type: 'xaml-code',
-      value: '',
+      value: XamlExportables,
       filename: xamlCode
     });
   }

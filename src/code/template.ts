@@ -1,4 +1,5 @@
-export const XAML_TMPL2 = 
+export const CODE_KEYWORD = '__CODE__'
+export const XAML_TMPL =
 `
 <?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage x:Class="NUITizenGallery.HelloWorldPage"

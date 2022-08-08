@@ -45,7 +45,7 @@ class App extends React.Component<{}, State> {
 
       this.myExportables = msg.value;
       //let myExportables : ExportableBytes[] = msg.value;
-      console.log('kth ui : ' + this.myExportables.length + ' ' + msg.filename);
+      console.log('kth ui exp: ' + this.myExportables.length);
       console.log('kth win message : export results');
 
       /*
@@ -54,12 +54,40 @@ class App extends React.Component<{}, State> {
           parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
         });
         */
+
+        let generatedCode = `${this.state.xamlCode}`;
+        let refinedCode = generatedCode.substring(1);
+
+        let zip = new JSZip();
+        zip.file('layout.xaml', refinedCode);
+        let imgFolder = zip.folder('images');
+
+        for (let data of this.myExportables) {
+          const { name, setting, bytes, blobType, extension } = data;
+          const buffer = toBuffer(bytes);
+
+          let blob = new Blob([buffer], { type: blobType })
+          imgFolder.file(`${name}${setting.suffix}${extension}`, blob, { base64: true });
+        }
+
+        zip.generateAsync({ type: 'blob' })
+        .then((content) => {
+          const blobURL = window.URL.createObjectURL(content);
+          const link = document.createElement('a');
+          link.className = 'button button-primary';
+          link.href = blobURL;
+          link.download = `${this.state.fileName}.zip`
+          link.click()
+          link.setAttribute('download', `${this.state.fileName}.zip`);
+        })
     }
 
     if (msg.type === 'xaml-code') {
 
         //const codeElement = document.getElementById('mytextarea');
         //codeElement.innerText = msg.filename;
+        this.myExportables = msg.value;
+        console.log('kth ui : ' + this.myExportables.length);
 
         console.log('kth win mesage : export xaml code');
         this.applyXamlCode(msg.filename);
@@ -74,35 +102,11 @@ class App extends React.Component<{}, State> {
   }
 
   onExport() {
+    const pluginMessage = { type: 'to-png' };
+    parent.postMessage({ pluginMessage: pluginMessage }, '*');
     //this.setState({ loading: true });
     //const pluginMessage = { type: 'export', value: this.state.convention };
     //parent.postMessage({ pluginMessage: pluginMessage }, '*');
-
-    let generatedCode = `${this.state.xamlCode}`;
-    let refinedCode = generatedCode.substring(1);
-
-    let zip = new JSZip();
-    zip.file('layout.xaml', refinedCode);
-    let imgFolder = zip.folder('images');
-
-    for (let data of this.myExportables) {
-      const { name, setting, bytes, blobType, extension } = data;
-      const buffer = toBuffer(bytes);
-
-      let blob = new Blob([buffer], { type: blobType })
-      imgFolder.file(`${name}${setting.suffix}${extension}`, blob, { base64: true });
-    }
-
-    zip.generateAsync({ type: 'blob' })
-    .then((content) => {
-      const blobURL = window.URL.createObjectURL(content);
-      const link = document.createElement('a');
-      link.className = 'button button-primary';
-      link.href = blobURL;
-      link.download = `${this.state.fileName}.zip`
-      link.click()
-      link.setAttribute('download', `${this.state.fileName}.zip`);
-    })
   }
 
   onExportPng() {
