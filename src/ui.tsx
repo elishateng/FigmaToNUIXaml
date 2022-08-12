@@ -112,6 +112,18 @@ class App extends React.Component<{}, State> {
   onExportPng() {
     const pluginMessage = { type: 'to-png' };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
+
+    fetch('http://localhost:8080/build', {
+      method: 'POST', // or 'PUT'
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({xaml:'<></>'}),
+    }).then((res)=>{
+      return res.json();
+    });
+
   }
 
   onToXaml() {

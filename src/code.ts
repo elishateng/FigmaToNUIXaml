@@ -343,6 +343,7 @@ figma.ui.onmessage = msg => {
 
     //exportPNG(globalInt);
 
+    /*
     figma.ui.postMessage({
       type: 'exportResults',
       value: XamlExportables,
@@ -350,6 +351,7 @@ figma.ui.onmessage = msg => {
     });
 
     console.log('global data ' + globalInt + ' ' + XamlExportables.length);
+    */
 
     //exportAs('Original')
     //const nodes = figma.currentPage.selection;
