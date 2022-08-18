@@ -26,8 +26,8 @@ class App extends React.Component<{}, State> {
     }
 
     this.onSelect = this.onSelect.bind(this);
-    this.onExport = this.onExport.bind(this);
-    this.onExportPng = this.onExportPng.bind(this);
+    this.onExportApplication = this.onExportApplication.bind(this);
+    this.onExportTheme = this.onExportTheme.bind(this);
     this.onFileNameChanged = this.onFileNameChanged.bind(this);
     window.addEventListener("message", this.handleMessage.bind(this));
   }
@@ -101,18 +101,21 @@ class App extends React.Component<{}, State> {
       console.log('kth text area is changed!');
   }
 
-  onExport() {
-    const pluginMessage = { type: 'to-png' };
+  onExportApplication() {
+    const pluginMessage = { type: 'exportCode' };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
     //this.setState({ loading: true });
     //const pluginMessage = { type: 'export', value: this.state.convention };
     //parent.postMessage({ pluginMessage: pluginMessage }, '*');
   }
 
-  onExportPng() {
-    const pluginMessage = { type: 'to-png' };
+  onExportTheme() {
+    const pluginMessage = { type: 'exportTheme' };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
 
+
+    // [WillUse] : 로컬 서버 커넥트
+    /*
     fetch('http://localhost:8080/build', {
       method: 'POST', // or 'PUT'
       headers: {
@@ -123,6 +126,7 @@ class App extends React.Component<{}, State> {
     }).then((res)=>{
       return res.json();
     });
+    */
 
   }
 
@@ -154,8 +158,8 @@ class App extends React.Component<{}, State> {
           <Button id="export" fullWidth variant="secondary" onClick={this.onToXaml}>Convert to NUI Xaml</Button>
           <Text id="text"> File Name : </Text>
           <input id="input" onChange={this.onFileNameChanged}/>
-          <Button id="export" variant="secondary" fullWidth onClick={this.onExport}>Export as NUI Xaml</Button>
-          <Button id="export" variant="secondary" fullWidth onClick={this.onExportPng}>Export as PNG</Button>
+          <Button id="export" variant="secondary" fullWidth onClick={this.onExportApplication}>Export as NUI Application</Button>
+          <Button id="export" variant="secondary" fullWidth onClick={this.onExportTheme}>Export Component as Theme</Button>
         </div>
       </>
     );

@@ -1,5 +1,7 @@
 import { ExportableBytes } from "../interfaces";
 import { inConvention } from "./convert";
+import { code_ts_function } from "../code";
+
 
 const exportFilename = (convention: string): string => {
   const projectName = figma.root.name;
@@ -105,6 +107,7 @@ export async function exportPNG(globalInt:number[]): Promise<string> {
     }
   }
 
+  //현재 selection에서 가져온다
   const nodes = figma.currentPage.selection;
   if (!isValidSelection(nodes)) {
     return new Promise(res => {
@@ -124,7 +127,7 @@ export async function exportPNG(globalInt:number[]): Promise<string> {
       for (const child of children)
       {
         if (child.type ==="INSTANCE") {
-          console.log('instance : ' + child.type);
+          console.log('instance : ' + 'main : ' + child.mainComponent.name + ' child name : ' + child.name);
           let comp = child.mainComponent;
           //console.log('comp type : ' + comp.type + ' ' + comp.name + ' ' + comp.parent.type + ' ' + comp.parent.name);
           //console.log(comp);
@@ -159,4 +162,42 @@ export async function exportPNG(globalInt:number[]): Promise<string> {
   });
 
   return new Promise(res => res('Complete exportPNG.'));
+}
+
+export async function exportTheme(): Promise<string> {
+  console.log('kth export theme');
+
+  const compSet = figma.root.findAll((n) => {
+  let isComponent = false;
+    return (n.type === "COMPONENT" && n.parent.type != "COMPONENT_SET" || n.type === "COMPONENT_SET")}
+  );
+
+  for (let c of compSet)
+  {
+     if (c.type === "COMPONENT_SET") {
+        console.log('compSet ' + c.name);
+
+        //let code:string = ButtonStyle;
+
+        if (c.name == 'MyButton') {
+           let compArray = c.children;
+           for (let cc of compArray)
+           {
+             console.log(cc.name);
+           }
+        }
+     }
+  }
+
+  code_ts_function();
+
+  /*
+  figma.ui.postMessage({
+    type: 'exportResults',
+    value: 'here',
+    filename: exportFilename("temp")
+  });
+  */
+
+  return new Promise(res => res('Complete exportTheme.'));
 }

@@ -1,7 +1,9 @@
-import { exportAs, exportPNG } from './code/exporter';
+import { exportAs, exportPNG, exportTheme } from './code/exporter';
 import { v1 as uuid } from 'uuid';
 import { ExportableBytes } from "./interfaces";
 import {CODE_KEYWORD, XAML_TMPL} from './code/template'
+import { ScriptHTMLAttributes } from 'react';
+import { XAML_CS_TMPL, XAML_CS_CODE } from './code/code_template';
 
 
 // This shows the HTML page in "ui.html".
@@ -88,7 +90,6 @@ class ResourceUrl implements Spec {
   path:string
   toXAML = () => `${this.path}`
 }
-
 
 class Component {
   name:String
@@ -297,6 +298,66 @@ const generateComponentCode = (layer:SceneNode):string => {
   }
 }
 
+const formatAlignment = (format: string): string => {
+  switch(format) {
+    case "MIN": return 'Begin'
+    case "CENTER": return 'Center'
+    case "MAX": return 'End'
+    default: return ''
+  }
+}
+
+const generateThemeCode = ():string => {
+  let compSetArray:(PageNode | SceneNode)[] = figma.root.findAll((n) => {
+  let isComponent = false;
+    return (n.type === "COMPONENT" && n.parent.type != "COMPONENT_SET" || n.type === "COMPONENT_SET")}
+  );
+
+  let themeCode:string = '';
+
+  for (let compSet of compSetArray)
+  {
+    if (compSet.type === "COMPONENT_SET") {
+        if (compSet.name == 'MyButton') {
+
+          let compDefault:ComponentNode = (compSet.findOne(child => child.name == 'Default') as ComponentNode);
+          let compPressed:ComponentNode = (compSet.findOne(child => child.name == 'Pressed') as ComponentNode);
+          const textNode:TextNode = (compDefault.findOne(child => child.type == 'TEXT') as TextNode)
+          console.log(compDefault);
+
+          themeCode =
+          `
+          Size = new Size(${compDefault.width}, ${compDefault.height});
+          CornerRadius = ${compDefault.cornerRadius as number};
+          ItemHorizontalAlignment = HorizontalAlignment.${formatAlignment(compDefault.primaryAxisAlignItems)};
+          ItemVerticalAlignment = VerticalAlignment.${formatAlignment(compDefault.counterAxisAlignItems)};
+
+          BackgroundColor = new Selector<Color>()
+          {
+            Normal = new Color(${toHex(compDefault.fills[0].color)});
+            Pressed = new Color(${toHex(compPressed.fills[0].color)});
+          }
+
+          Text = new TextLabelStyle()
+          {
+            TextColor = new Color(${ toHex(textNode.fills[0].color)}),
+            PixelSize = ${parseInt(textNode.fontSize.toString()) / 6}
+          }
+          `;
+
+          let result = XAML_CS_TMPL.replace('__CODE__', themeCode).replace(/__CLASS__/gi, 'Button');
+
+          console.log(result);
+        }
+    }
+  }
+  return;
+}
+
+export function code_ts_function(){
+  console.log('my code ts function');
+}
+
 figma.ui.onmessage = msg => {
   if (msg.type === 'to-xaml') {
 
@@ -313,8 +374,8 @@ figma.ui.onmessage = msg => {
       filename: xamlCode
     });
   }
-  else if(msg.type == 'to-png') {
-    console.log('kth to-png');
+  else if (msg.type == 'exportCode') {
+    console.log('kth exportCode');
 
 //    console.log('global data ' + globalInt);
     //export parent and child components as png file
@@ -343,7 +404,6 @@ figma.ui.onmessage = msg => {
 
     //exportPNG(globalInt);
 
-    /*
     figma.ui.postMessage({
       type: 'exportResults',
       value: XamlExportables,
@@ -351,10 +411,21 @@ figma.ui.onmessage = msg => {
     });
 
     console.log('global data ' + globalInt + ' ' + XamlExportables.length);
-    */
 
     //exportAs('Original')
     //const nodes = figma.currentPage.selection;
+  }
+  else if (msg.type == 'exportTheme') {
+    // [WillUse] : 셀렉션 컴포넌트 이미지 Export
+    //exportPNG(globalInt);
+
+    // [WillUse] : 기능후현후 이 함수로 이전 예정
+    //exportTheme();
+
+    console.log('kth export theme');
+
+    const xaml_cs_code = generateThemeCode();
+
   }
   else{
     figma.notify('Done!');
