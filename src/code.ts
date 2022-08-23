@@ -307,6 +307,7 @@ const formatAlignment = (format: string): string => {
   }
 }
 
+//Export Theme as cs file
 const generateThemeCode = ():string => {
   let compSetArray:(PageNode | SceneNode)[] = figma.root.findAll((n) => {
   let isComponent = false;
@@ -322,31 +323,50 @@ const generateThemeCode = ():string => {
 
           let compDefault:ComponentNode = (compSet.findOne(child => child.name == 'Default') as ComponentNode);
           let compPressed:ComponentNode = (compSet.findOne(child => child.name == 'Pressed') as ComponentNode);
-          const textNode:TextNode = (compDefault.findOne(child => child.type == 'TEXT') as TextNode)
-          console.log(compDefault);
+          let compFocused:ComponentNode = (compSet.findOne(child => child.name == 'Focused') as ComponentNode);
+          let compSelected:ComponentNode = (compSet.findOne(child => child.name == 'Selected') as ComponentNode);
+          let compDisabled:ComponentNode = (compSet.findOne(child => child.name == 'Disabled') as ComponentNode);
+
+          const textDefault:TextNode = compDefault? (compDefault.findOne(child => child.type == 'TEXT') as TextNode) : null
+          const textPressed:TextNode = compPressed? (compPressed.findOne(child => child.type == 'TEXT') as TextNode) : null
+          const textFocused:TextNode = compFocused? (compFocused.findOne(child => child.type == 'TEXT') as TextNode) : null
+          const textSelected:TextNode = compSelected? (compSelected.findOne(child => child.type == 'TEXT') as TextNode) : null
+          const textDisabled:TextNode = compDisabled? (compDisabled.findOne(child => child.type == 'TEXT') as TextNode) : null
 
           themeCode =
           `
-          Size = new Size(${compDefault.width}, ${compDefault.height});
-          CornerRadius = ${compDefault.cornerRadius as number};
-          ItemHorizontalAlignment = HorizontalAlignment.${formatAlignment(compDefault.primaryAxisAlignItems)};
-          ItemVerticalAlignment = VerticalAlignment.${formatAlignment(compDefault.counterAxisAlignItems)};
+          Size = new Size(${compDefault.width}, ${compDefault.height}),
+          CornerRadius = ${compDefault.cornerRadius as number},
+          ItemHorizontalAlignment = HorizontalAlignment.${formatAlignment(compDefault.primaryAxisAlignItems)},
+          ItemVerticalAlignment = VerticalAlignment.${formatAlignment(compDefault.counterAxisAlignItems)},
 
           BackgroundColor = new Selector<Color>()
           {
-            Normal = new Color(${toHex(compDefault.fills[0].color)});
-            Pressed = new Color(${toHex(compPressed.fills[0].color)});
-          }
+            ${compDefault? `Normal = new Color("${toHex(compDefault.fills[0].color)}"),` : ``}
+            ${compPressed? `Pressed = new Color("${toHex(compPressed.fills[0].color)}"),` : ``}
+            ${compFocused? `Focused = new Color("${toHex(compFocused.fills[0].color)}"),` : ``}
+            ${compSelected? `Selected = new Color("${toHex(compSelected.fills[0].color)}"),` : ``}
+            ${compDisabled? `Disabled = new Color("${toHex(compDisabled.fills[0].color)}"),` : ``}
+          },
 
           Text = new TextLabelStyle()
           {
-            TextColor = new Color(${ toHex(textNode.fills[0].color)}),
-            PixelSize = ${parseInt(textNode.fontSize.toString()) / 6}
+            TextColor = new Selector<Color>
+            {
+              ${textDefault? `Normal = new Color("${toHex(textDefault.fills[0].color)}"),` : ``}
+              ${textPressed? `Pressed = new Color("${toHex(textPressed.fills[0].color)}"),` : ``}
+              ${textFocused? `Focused = new Color("${toHex(textFocused.fills[0].color)}"),` : ``}
+              ${textSelected? `Selected = new Color("${toHex(textSelected.fills[0].color)}"),` : ``}
+              ${textDisabled? `Disabled = new Color("${toHex(textDisabled.fills[0].color)}"),` : ``}
+            },
+
+            PixelSize = ${parseInt(textDefault.fontSize.toString()) / 6}
           }
           `;
 
-          let result = XAML_CS_TMPL.replace('__CODE__', themeCode).replace(/__CLASS__/gi, 'Button');
-
+          //Remove New Lines
+          let result = themeCode.replace(/\n(\ |\n)*\n/gi,'\n');
+          result = XAML_CS_TMPL.replace('__CODE__', result).replace(/__CLASS__/gi, 'Button');
           console.log(result);
         }
     }
