@@ -314,12 +314,14 @@ const generateThemeCode = ():string => {
     return (n.type === "COMPONENT" && n.parent.type != "COMPONENT_SET" || n.type === "COMPONENT_SET")}
   );
 
-  let themeCode:string = '';
+  let themeCSCode:string = '';
 
   for (let compSet of compSetArray)
   {
     if (compSet.type === "COMPONENT_SET") {
         if (compSet.name == 'MyButton') {
+
+          let themeCode:string = '';
 
           let compDefault:ComponentNode = (compSet.findOne(child => child.name == 'Default') as ComponentNode);
           let compPressed:ComponentNode = (compSet.findOne(child => child.name == 'Pressed') as ComponentNode);
@@ -367,10 +369,18 @@ const generateThemeCode = ():string => {
           //Remove New Lines
           let result = themeCode.replace(/\n(\ |\n)*\n/gi,'\n');
           result = XAML_CS_TMPL.replace('__CODE__', result).replace(/__CLASS__/gi, 'Button');
+          themeCSCode += result;
           console.log(result);
         }
     }
   }
+
+  figma.ui.postMessage({
+    type: 'theme-code',
+    value: '',
+    filename: themeCSCode
+  });
+
   return;
 }
 

@@ -81,8 +81,7 @@ class App extends React.Component<{}, State> {
           link.setAttribute('download', `${this.state.fileName}.zip`);
         })
     }
-
-    if (msg.type === 'xaml-code') {
+    else if (msg.type === 'xaml-code') {
 
         //const codeElement = document.getElementById('mytextarea');
         //codeElement.innerText = msg.filename;
@@ -92,6 +91,25 @@ class App extends React.Component<{}, State> {
         console.log('kth win mesage : export xaml code');
         this.applyXamlCode(msg.filename);
     }
+
+    else if (msg.type === 'theme-code' ) {
+      console.log('[UI] ' + msg.filename);
+      let zip = new JSZip();
+        zip.file('DefaultThemeCommon.cs', msg.filename);
+
+        zip.generateAsync({ type: 'blob' })
+        .then((content) => {
+          const blobURL = window.URL.createObjectURL(content);
+          const link = document.createElement('a');
+          link.className = 'button button-primary';
+          link.href = blobURL;
+          link.download = `DefaultThemeCommon.zip`
+          link.click()
+          link.setAttribute('download', `DefaultThemeCommon.zip`);
+        })
+    }
+
+
   }
 
   onSelect(value: string) {
