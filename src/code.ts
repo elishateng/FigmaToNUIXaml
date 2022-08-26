@@ -39,6 +39,7 @@ let mydata : number = 0;
 let globalInt:number[] = [];
 let XamlExportables : ExportableBytes[] = [];
 let xamlCode:string = '';
+let imageNumber = 1;
 
 /*
 const CODE_KEYWORD = '__CODE__'
@@ -206,12 +207,12 @@ const NUI_COMPONENTS = {
 
 const toHex = ({r,g,b}) => "#" + ((1 << 24) + ((r * 255 | 0) << 16) + ((g * 255 | 0) << 8) + (b * 255 | 0)).toString(16).slice(1)
 
-async function exportXaml(node : InstanceNode) {
+async function exportXaml(node : SceneNode, resName: string) {
   let setting : ExportSettings = { format: "PNG", suffix: '', constraint: { type: "SCALE", value: 1 }, contentsOnly: true };
 
   const bytes = await node.exportAsync(setting);
   XamlExportables.push({
-    name: "image1",
+    name: resName,
     setting: setting,
     bytes: bytes,
     blobType: 'image/png',
@@ -234,7 +235,8 @@ const generateComponentCode = (layer:SceneNode):string => {
       url.path = "*Resource*/images/image1.png";
       imageView.resourceUrl = url;
 
-      exportXaml(instanceNode).then(()=>{
+      imageNumber++;
+      exportXaml(instanceNode, 'image'+imageNumber).then(()=>{
         console.log('exportXaml : ' + XamlExportables.length);
       });
 
@@ -275,6 +277,7 @@ const generateComponentCode = (layer:SceneNode):string => {
     }
   } else if (layer.type == 'FRAME') {
 
+    console.log(layer);
     const frameLayer:FrameNode = layer as FrameNode;
     const view = new View()
     view.widthSpecification = layer.width
@@ -282,7 +285,23 @@ const generateComponentCode = (layer:SceneNode):string => {
     view.layout = new LinearLayout()
     view.layout.cellPadding = layer.itemSpacing
     view.layout.linaerAligment = 'Center'
-    view.backgroundColor = toHex(frameLayer.fills[0].color);
+
+    if (layer.backgrounds[0].type == 'SOLID')
+      view.backgroundColor = toHex(frameLayer.fills[0].color);
+    else if(layer.backgrounds[0].type == 'IMAGE')
+    {
+      layer.children.forEach((childNode) => {
+        childNode.visible = false;
+      })
+      imageNumber++;
+      exportXaml(layer, 'image' + imageNumber).then(()=>{
+        console.log('exportXaml : ' + XamlExportables.length);
+
+        layer.children.forEach((childNode) => {
+          childNode.visible = true;
+        })
+      });
+    }
 
     if (layer.layoutMode == 'VERTICAL') {
       view.layout.linearOrientation = 'Vertical'
@@ -391,6 +410,7 @@ export function code_ts_function(){
 figma.ui.onmessage = msg => {
   if (msg.type === 'to-xaml') {
 
+    imageNumber = 0;
     const layer:any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
     const code = generateComponentCode(layer)
     xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
