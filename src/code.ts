@@ -164,6 +164,7 @@ class LinearLayout extends Layout {
 class View extends Component {
   name:String = "View"
   backgroundColor:string
+  backgroundImage: string
   widthSpecification:number
   heightSpecification:number
   layout:LinearLayout
@@ -180,11 +181,14 @@ class View extends Component {
       childrenCodeSnippet += code + '\n'
     })
 
+    let backgroundCodeSnippet = ''
+    backgroundCodeSnippet += this.backgroundImage ? `BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `BackgroundColor="${this.backgroundColor}"` : "";
+
     const componentCode = `<${this.name}
       x:Name="undefined${newId}"
       WidthSpecification="${this.widthSpecification}"
       HeightSpecification="${this.heightSpecification}"
-      BackgroundColor="${this.backgroundColor}"
+      ${backgroundCodeSnippet}
       >
       
       <View.Layout>
@@ -231,11 +235,11 @@ const generateComponentCode = (layer:SceneNode):string => {
       imageView.sizeWidth = instanceNode.width;
       imageView.sizeHeight = instanceNode.height;
 
+      imageNumber++;
       const url = new ResourceUrl();
-      url.path = "*Resource*/images/image1.png";
+      url.path = "*Resource*/images/image" + imageNumber + ".png";
       imageView.resourceUrl = url;
 
-      imageNumber++;
       exportXaml(instanceNode, 'image'+imageNumber).then(()=>{
         console.log('exportXaml : ' + XamlExportables.length);
       });
@@ -294,6 +298,7 @@ const generateComponentCode = (layer:SceneNode):string => {
         childNode.visible = false;
       })
       imageNumber++;
+      view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
       exportXaml(layer, 'image' + imageNumber).then(()=>{
         console.log('exportXaml : ' + XamlExportables.length);
 
@@ -307,7 +312,9 @@ const generateComponentCode = (layer:SceneNode):string => {
       view.layout.linearOrientation = 'Vertical'
     } else if (layer.layoutMode == 'HORIZONTAL') {
       view.layout.linearOrientation = 'Horizontal'
-    } else return
+    } else {
+      //return
+    }
 
     layer.children.forEach((child) => view.childrenNode.push(child))
 
