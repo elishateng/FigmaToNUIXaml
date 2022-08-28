@@ -1,15 +1,34 @@
-import { exportAs, exportPNG, exportTheme } from './code/exporter';
-import { v1 as uuid } from 'uuid';
-import { ExportableBytes } from "./interfaces";
-import {CODE_KEYWORD, XAML_TMPL} from './code/template'
-import { ScriptHTMLAttributes } from 'react';
-import { XAML_CS_TMPL, XAML_CS_CODE } from './code/code_template';
+import {
+  exportAs,
+  exportPNG,
+  exportTheme
+} from './code/exporter';
+import {
+  v1 as uuid
+} from 'uuid';
+import {
+  ExportableBytes
+} from "./interfaces";
+import {
+  CODE_KEYWORD,
+  XAML_TMPL
+} from './code/template'
+import {
+  ScriptHTMLAttributes
+} from 'react';
+import {
+  XAML_CS_TMPL,
+  XAML_CS_CODE
+} from './code/code_template';
 
 
 // This shows the HTML page in "ui.html".
 //figma.showUI(__html__, { visible: true, width: 240, height: 160 });
-figma.showUI(__html__, {width: 300, height: 450, title: "FigmaToNUIXamlPlugin"}
-);
+figma.showUI(__html__, {
+  width: 300,
+  height: 450,
+  title: "FigmaToNUIXamlPlugin"
+});
 
 /*
 // Calls to "parent.postMessage" from within the HTML page will trigger this
@@ -35,10 +54,10 @@ figma.ui.onmessage = async (msg) => {
 };
 */
 
-let mydata : number = 0;
-let globalInt:number[] = [];
-let XamlExportables : ExportableBytes[] = [];
-let xamlCode:string = '';
+let mydata: number = 0;
+let globalInt: number[] = [];
+let XamlExportables: ExportableBytes[] = [];
+let xamlCode: string = '';
 let imageNumber = 1;
 
 /*
@@ -66,46 +85,49 @@ const XAML_TMPL =
 `
 */
 
-figma.showUI(__html__, {width: 300, height: 450, title: "FigmaToNUIXamlPlugin"}
-);
+figma.showUI(__html__, {
+  width: 300,
+  height: 450,
+  title: "FigmaToNUIXamlPlugin"
+});
 
 class Spec {
-  toXAML:Function  
+  toXAML: Function
 }
 
-class Position implements Spec{
-  x:number
-  y:number
+class Position implements Spec {
+  x: number
+  y: number
   toXAML = () => `${this.x},${this.y}`
 }
 
-class BorderRadius implements Spec{
-  leftTop:number
-  rightTop:number
-  leftBottom:number
-  rightBottom:number
+class BorderRadius implements Spec {
+  leftTop: number
+  rightTop: number
+  leftBottom: number
+  rightBottom: number
   toXAML = () => `${this.leftTop},${this.rightTop},${this.leftBottom},${this.rightBottom}`
 }
 
 class ResourceUrl implements Spec {
-  path:string
+  path: string
   toXAML = () => `${this.path}`
 }
 
 class Component {
-  name:String
+  name: String
   toXaml() {
     const _this = this
     const atttrbuteCodes = Object.keys(this).map((name) => {
       const attrName = name.charAt(0).toUpperCase() + name.slice(1)
-      const property:any = _this[name]
+      const property: any = _this[name]
       const value = (property.toXAML) ? property.toXAML() : property
       const code = `${attrName}="${value}"`
       return code
     })
 
     let id = uuid();
-    let newId = id.replace(/-/gi,'');
+    let newId = id.replace(/-/gi, '');
     const componentCode = `
     <${this.name}
       x:Name="undefined${newId}"
@@ -116,64 +138,64 @@ class Component {
   }
 }
 
-class Button extends Component{
-  name:String = "Button"
+class Button extends Component {
+  name: String = "Button"
 
-  sizeWidth:number
-  sizeHeight:number
-  pointSize:number
+  sizeWidth: number
+  sizeHeight: number
+  pointSize: number
 
-  text:string
-  textColor:string
-  backgroundColor:string
-  cornerRadius:BorderRadius
+  text: string
+  textColor: string
+  backgroundColor: string
+  cornerRadius: BorderRadius
 
-  position2D?:Position
+  position2D ? : Position
 }
 
 class ImageView extends Component {
-  name:String = "ImageView"
-  sizeWidth:number
-  sizeHeight:number
-  resourceUrl:ResourceUrl
+  name: String = "ImageView"
+  sizeWidth: number
+  sizeHeight: number
+  resourceUrl: ResourceUrl
 }
 
 class TextLabel extends Component {
-  name:String = "TextLabel"
+  name: String = "TextLabel"
 
-  sizeWidth:number
-  sizeHeight:number
-  pointSize:number
+  sizeWidth: number
+  sizeHeight: number
+  pointSize: number
 
-  text:string
-  textColor:string
+  text: string
+  textColor: string
 
-  position2D?:Position
+  position2D ? : Position
 }
 
-class Layout{
+class Layout {
 
 }
 
 class LinearLayout extends Layout {
-  linearOrientation:string
-  linaerAligment:string  
-  cellPadding:number = 0
+  linearOrientation: string
+  linaerAligment: string
+  cellPadding: number = 0
 }
 
 class View extends Component {
-  name:String = "View"
-  backgroundColor:string
+  name: String = "View"
+  backgroundColor: string
   backgroundImage: string
-  widthSpecification:number
-  heightSpecification:number
-  layout:LinearLayout
-  childrenNode:SceneNode[] = []
+  widthSpecification: number
+  heightSpecification: number
+  layout: LinearLayout
+  childrenNode: SceneNode[] = []
 
   toXaml(): string {
 
     let id = uuid();
-    let newId = id.replace(/-/gi,'');
+    let newId = id.replace(/-/gi, '');
     let childrenCodeSnippet = ''
     this.childrenNode.forEach((childNode) => {
       const code = generateComponentCode(childNode)
@@ -205,14 +227,26 @@ class View extends Component {
 const NUI_COMPONENTS = {
   'Button': Button,
   'View': View,
-  'TextLabel' : TextLabel,
-  'ImageView' : ImageView,
+  'TextLabel': TextLabel,
+  'ImageView': ImageView,
 }
 
-const toHex = ({r,g,b}) => "#" + ((1 << 24) + ((r * 255 | 0) << 16) + ((g * 255 | 0) << 8) + (b * 255 | 0)).toString(16).slice(1)
+const toHex = ({
+  r,
+  g,
+  b
+}) => "#" + ((1 << 24) + ((r * 255 | 0) << 16) + ((g * 255 | 0) << 8) + (b * 255 | 0)).toString(16).slice(1)
 
-async function exportXaml(node : SceneNode, resName: string) {
-  let setting : ExportSettings = { format: "PNG", suffix: '', constraint: { type: "SCALE", value: 1 }, contentsOnly: true };
+async function exportXaml(node: SceneNode, resName: string) {
+  let setting: ExportSettings = {
+    format: "PNG",
+    suffix: '',
+    constraint: {
+      type: "SCALE",
+      value: 1
+    },
+    contentsOnly: true
+  };
 
   const bytes = await node.exportAsync(setting);
   XamlExportables.push({
@@ -224,7 +258,7 @@ async function exportXaml(node : SceneNode, resName: string) {
   });
 }
 
-const generateComponentCode = (layer:SceneNode):string => {
+const generateComponentCode = (layer: SceneNode): string => {
 
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
@@ -240,34 +274,32 @@ const generateComponentCode = (layer:SceneNode):string => {
       url.path = "*Resource*/images/image" + imageNumber + ".png";
       imageView.resourceUrl = url;
 
-      exportXaml(instanceNode, 'image'+imageNumber).then(()=>{
+      exportXaml(instanceNode, 'image' + imageNumber).then(() => {
         console.log('exportXaml : ' + XamlExportables.length);
       });
 
       const xaml = imageView.toXaml();
       return xaml;
-    }
-    else if (componentType == 'TextLabel') {
+    } else if (componentType == 'TextLabel') {
       console.log('TextLabel!!!');
-      const textLayer:TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
+      const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
       const textLabel = new TextLabel()
       textLabel.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
       textLabel.text = textLayer.characters;
 
       const xaml = textLabel.toXaml();
       return xaml;
-    }
-    else if (componentType == 'Button') {
-      const textLayer:TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
-      const backgroundLayer:RectangleNode = (instanceNode.findOne(child => child.type == 'RECTANGLE') as RectangleNode)
-  
+    } else if (componentType == 'Button') {
+      const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
+      const backgroundLayer: RectangleNode = (instanceNode.findOne(child => child.type == 'RECTANGLE') as RectangleNode)
+
       const button = new Button()
       button.sizeWidth = instanceNode.width
       button.sizeHeight = instanceNode.height
       button.text = textLayer.characters
       button.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
       button.textColor = toHex(textLayer.fills[0].color)
-      
+
       button.backgroundColor = toHex(backgroundLayer.fills[0].color)
       const radius = new BorderRadius()
       radius.leftTop = backgroundLayer.topLeftRadius
@@ -282,7 +314,7 @@ const generateComponentCode = (layer:SceneNode):string => {
   } else if (layer.type == 'FRAME') {
 
     console.log(layer);
-    const frameLayer:FrameNode = layer as FrameNode;
+    const frameLayer: FrameNode = layer as FrameNode;
     const view = new View()
     view.widthSpecification = layer.width
     view.heightSpecification = layer.height
@@ -292,14 +324,13 @@ const generateComponentCode = (layer:SceneNode):string => {
 
     if (layer.backgrounds[0].type == 'SOLID')
       view.backgroundColor = toHex(frameLayer.fills[0].color);
-    else if(layer.backgrounds[0].type == 'IMAGE')
-    {
+    else if (layer.backgrounds[0].type == 'IMAGE') {
       layer.children.forEach((childNode) => {
         childNode.visible = false;
       })
       imageNumber++;
       view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
-      exportXaml(layer, 'image' + imageNumber).then(()=>{
+      exportXaml(layer, 'image' + imageNumber).then(() => {
         console.log('exportXaml : ' + XamlExportables.length);
 
         layer.children.forEach((childNode) => {
@@ -325,43 +356,46 @@ const generateComponentCode = (layer:SceneNode):string => {
 }
 
 const formatAlignment = (format: string): string => {
-  switch(format) {
-    case "MIN": return 'Begin'
-    case "CENTER": return 'Center'
-    case "MAX": return 'End'
-    default: return ''
+  switch (format) {
+    case "MIN":
+      return 'Begin'
+    case "CENTER":
+      return 'Center'
+    case "MAX":
+      return 'End'
+    default:
+      return ''
   }
 }
 
 //Export Theme as cs file
-const generateThemeCode = ():string => {
-  let compSetArray:(PageNode | SceneNode)[] = figma.root.findAll((n) => {
-  let isComponent = false;
-    return (n.type === "COMPONENT" && n.parent.type != "COMPONENT_SET" || n.type === "COMPONENT_SET")}
-  );
+const generateThemeCode = (): string => {
+  let compSetArray: (PageNode | SceneNode)[] = figma.root.findAll((n) => {
+    let isComponent = false;
+    return (n.type === "COMPONENT" && n.parent.type != "COMPONENT_SET" || n.type === "COMPONENT_SET")
+  });
 
-  let themeCSCode:string = '';
+  let themeCSCode: string = '';
 
-  for (let compSet of compSetArray)
-  {
+  for (let compSet of compSetArray) {
     if (compSet.type === "COMPONENT_SET") {
-        if (compSet.name == 'MyButton') {
+      if (compSet.name == 'MyButton') {
 
-          let themeCode:string = '';
+        let themeCode: string = '';
 
-          let compDefault:ComponentNode = (compSet.findOne(child => child.name == 'Default') as ComponentNode);
-          let compPressed:ComponentNode = (compSet.findOne(child => child.name == 'Pressed') as ComponentNode);
-          let compFocused:ComponentNode = (compSet.findOne(child => child.name == 'Focused') as ComponentNode);
-          let compSelected:ComponentNode = (compSet.findOne(child => child.name == 'Selected') as ComponentNode);
-          let compDisabled:ComponentNode = (compSet.findOne(child => child.name == 'Disabled') as ComponentNode);
+        let compDefault: ComponentNode = (compSet.findOne(child => child.name == 'Default') as ComponentNode);
+        let compPressed: ComponentNode = (compSet.findOne(child => child.name == 'Pressed') as ComponentNode);
+        let compFocused: ComponentNode = (compSet.findOne(child => child.name == 'Focused') as ComponentNode);
+        let compSelected: ComponentNode = (compSet.findOne(child => child.name == 'Selected') as ComponentNode);
+        let compDisabled: ComponentNode = (compSet.findOne(child => child.name == 'Disabled') as ComponentNode);
 
-          const textDefault:TextNode = compDefault? (compDefault.findOne(child => child.type == 'TEXT') as TextNode) : null
-          const textPressed:TextNode = compPressed? (compPressed.findOne(child => child.type == 'TEXT') as TextNode) : null
-          const textFocused:TextNode = compFocused? (compFocused.findOne(child => child.type == 'TEXT') as TextNode) : null
-          const textSelected:TextNode = compSelected? (compSelected.findOne(child => child.type == 'TEXT') as TextNode) : null
-          const textDisabled:TextNode = compDisabled? (compDisabled.findOne(child => child.type == 'TEXT') as TextNode) : null
+        const textDefault: TextNode = compDefault ? (compDefault.findOne(child => child.type == 'TEXT') as TextNode) : null
+        const textPressed: TextNode = compPressed ? (compPressed.findOne(child => child.type == 'TEXT') as TextNode) : null
+        const textFocused: TextNode = compFocused ? (compFocused.findOne(child => child.type == 'TEXT') as TextNode) : null
+        const textSelected: TextNode = compSelected ? (compSelected.findOne(child => child.type == 'TEXT') as TextNode) : null
+        const textDisabled: TextNode = compDisabled ? (compDisabled.findOne(child => child.type == 'TEXT') as TextNode) : null
 
-          themeCode =
+        themeCode =
           `
           Size = new Size(${compDefault.width}, ${compDefault.height}),
           CornerRadius = ${compDefault.cornerRadius as number},
@@ -392,12 +426,12 @@ const generateThemeCode = ():string => {
           }
           `;
 
-          //Remove New Lines
-          let result = themeCode.replace(/\n(\ |\n)*\n/gi,'\n');
-          result = XAML_CS_TMPL.replace('__CODE__', result).replace(/__CLASS__/gi, 'Button');
-          themeCSCode += result;
-          console.log(result);
-        }
+        //Remove New Lines
+        let result = themeCode.replace(/\n(\ |\n)*\n/gi, '\n');
+        result = XAML_CS_TMPL.replace('__CODE__', result).replace(/__CLASS__/gi, 'Button');
+        themeCSCode += result;
+        console.log(result);
+      }
     }
   }
 
@@ -410,7 +444,7 @@ const generateThemeCode = ():string => {
   return;
 }
 
-export function code_ts_function(){
+export function code_ts_function() {
   console.log('my code ts function');
 }
 
@@ -418,7 +452,7 @@ figma.ui.onmessage = msg => {
   if (msg.type === 'to-xaml') {
 
     imageNumber = 0;
-    const layer:any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
+    const layer: any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
     const code = generateComponentCode(layer)
     xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
 
@@ -430,11 +464,10 @@ figma.ui.onmessage = msg => {
       value: XamlExportables,
       filename: xamlCode
     });
-  }
-  else if (msg.type == 'exportCode') {
+  } else if (msg.type == 'exportCode') {
     console.log('kth exportCode');
 
-//    console.log('global data ' + globalInt);
+    //    console.log('global data ' + globalInt);
     //export parent and child components as png file
     /*
     const nodes = figma.currentPage.selection;
@@ -471,8 +504,7 @@ figma.ui.onmessage = msg => {
 
     //exportAs('Original')
     //const nodes = figma.currentPage.selection;
-  }
-  else if (msg.type == 'exportTheme') {
+  } else if (msg.type == 'exportTheme') {
     // [WillUse] : 셀렉션 컴포넌트 이미지 Export
     //exportPNG(globalInt);
 
@@ -483,8 +515,7 @@ figma.ui.onmessage = msg => {
 
     const xaml_cs_code = generateThemeCode();
 
-  }
-  else{
+  } else {
     figma.notify('Done!');
   }
 };
