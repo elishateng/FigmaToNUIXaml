@@ -174,10 +174,7 @@ class TextLabel extends Component {
 }
 
 class Layout {
-
-}
-
-class LinearLayout extends Layout {
+  type: string
   linearOrientation: string
   linaerAligment: string
   cellPadding: number = 0
@@ -187,18 +184,19 @@ class View extends Component {
   name: String = "View"
   backgroundColor: string
   backgroundImage: string
+  position2D ? : Position
   widthSpecification: number
   heightSpecification: number
-  layout: LinearLayout
+  layout: Layout
   childrenNode: SceneNode[] = []
 
-  toXaml(): string {
+  toXaml(parentLayoutType: string = ''): string {
 
     let id = uuid();
     let newId = id.replace(/-/gi, '');
     let childrenCodeSnippet = ''
     this.childrenNode.forEach((childNode) => {
-      const code = generateComponentCode(childNode)
+      const code = generateComponentCode(childNode, parentLayoutType)
       if (!code) return
       childrenCodeSnippet += code + '\n'
     })
@@ -206,15 +204,21 @@ class View extends Component {
     let backgroundCodeSnippet = ''
     backgroundCodeSnippet += this.backgroundImage ? `BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `BackgroundColor="${this.backgroundColor}"` : "";
 
+    let layoutCodeSnippet = ''
+    layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" LinearAlignment="${this.layout.linaerAligment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />` : `<AbsoluteLayout />`;
+
+    let positionCodeSnippet = ''
+    positionCodeSnippet += parentLayoutType == 'ABSOLUTE' ? `Position2D="${this.position2D.toXAML()}"\n      ` : ``;
+
     const componentCode = `<${this.name}
       x:Name="undefined${newId}"
-      WidthSpecification="${this.widthSpecification}"
+      ${positionCodeSnippet}WidthSpecification="${this.widthSpecification}"
       HeightSpecification="${this.heightSpecification}"
       ${backgroundCodeSnippet}
       >
       
       <View.Layout>
-        <LinearLayout LinearOrientation="${this.layout.linearOrientation}" LinearAlignment="${this.layout.linaerAligment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />
+        ${layoutCodeSnippet}
       </View.Layout>
 
       ${childrenCodeSnippet}
@@ -258,11 +262,13 @@ async function exportXaml(node: SceneNode, resName: string) {
   });
 }
 
-const generateComponentCode = (layer: SceneNode): string => {
+const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''): string => {
 
+  console.log(layer.type);
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
     const componentType = instanceNode.mainComponent.name
+    console.log(componentType);
 
     if (componentType == 'ImageView') {
       const imageView = new ImageView();
@@ -289,9 +295,10 @@ const generateComponentCode = (layer: SceneNode): string => {
 
       const xaml = textLabel.toXaml();
       return xaml;
-    } else if (componentType == 'Button') {
+    } else if (componentType == 'Default') {
+      console.log('kth Button !!!');
+      console.log(instanceNode)
       const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
-      const backgroundLayer: RectangleNode = (instanceNode.findOne(child => child.type == 'RECTANGLE') as RectangleNode)
 
       const button = new Button()
       button.sizeWidth = instanceNode.width
@@ -300,12 +307,17 @@ const generateComponentCode = (layer: SceneNode): string => {
       button.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
       button.textColor = toHex(textLayer.fills[0].color)
 
-      button.backgroundColor = toHex(backgroundLayer.fills[0].color)
+      const pos = new Position()
+      pos.x = instanceNode.x;
+      pos.y = instanceNode.y;
+      button.position2D = pos;
+
+      button.backgroundColor = toHex(instanceNode.fills[0].color)
       const radius = new BorderRadius()
-      radius.leftTop = backgroundLayer.topLeftRadius
-      radius.leftBottom = backgroundLayer.bottomLeftRadius
-      radius.rightBottom = backgroundLayer.bottomRightRadius
-      radius.rightTop = backgroundLayer.topRightRadius
+      radius.leftTop = instanceNode.topLeftRadius
+      radius.leftBottom = instanceNode.bottomLeftRadius
+      radius.rightBottom = instanceNode.bottomRightRadius
+      radius.rightTop = instanceNode.topRightRadius
       button.cornerRadius = radius
       const xaml = button.toXaml()
 
@@ -316,9 +328,10 @@ const generateComponentCode = (layer: SceneNode): string => {
     console.log(layer);
     const frameLayer: FrameNode = layer as FrameNode;
     const view = new View()
+
     view.widthSpecification = layer.width
     view.heightSpecification = layer.height
-    view.layout = new LinearLayout()
+    view.layout = new Layout()
     view.layout.cellPadding = layer.itemSpacing
     view.layout.linaerAligment = 'Center'
 
@@ -339,17 +352,31 @@ const generateComponentCode = (layer: SceneNode): string => {
       });
     }
 
+    view.position2D = new Position();
+    if (layer.parent.type == 'PAGE') {
+      view.position2D.x = 0;
+      view.position2D.y = 0;
+    } else if (layer.parent.type == 'FRAME') {
+      view.position2D.x = layer.x;
+      view.position2D.y = layer.y;
+      parentLayoutType = layer.parent.layoutMode == 'NONE' ? 'ABSOLUTE' : 'LIENAR';
+    }
+
+    console.log(layer.layoutMode);
     if (layer.layoutMode == 'VERTICAL') {
       view.layout.linearOrientation = 'Vertical'
+      view.layout.type = "LINEAR"
     } else if (layer.layoutMode == 'HORIZONTAL') {
       view.layout.linearOrientation = 'Horizontal'
+      view.layout.type = "LINEAR"
     } else {
+      view.layout.type = "ABSOLUTE"
       //return
     }
 
     layer.children.forEach((child) => view.childrenNode.push(child))
 
-    const xaml = view.toXaml()
+    const xaml = view.toXaml(parentLayoutType)
 
     return xaml
   }
@@ -453,7 +480,7 @@ figma.ui.onmessage = msg => {
 
     imageNumber = 0;
     const layer: any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
-    const code = generateComponentCode(layer)
+    const code = generateComponentCode(layer, 'root')
     xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
 
     //const resource = generatedResource
