@@ -169,6 +169,8 @@ class TextLabel extends Component {
 
   text: string
   textColor: string
+  horizontalAlignment: string
+  verticalAlignment: string
 
   position2D ? : Position
 }
@@ -290,8 +292,13 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       console.log('TextLabel!!!');
       const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
       const textLabel = new TextLabel()
+      textLabel.sizeWidth = instanceNode.width
+      textLabel.sizeHeight = instanceNode.height
       textLabel.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
       textLabel.text = textLayer.characters;
+      textLabel.textColor = toHex(textLayer.fills[0].color);
+      textLabel.horizontalAlignment = formatTextHorizontalAlignment(textLayer.textAlignHorizontal);
+      textLabel.verticalAlignment = formatTextVerticalAlignment(textLayer.textAlignVertical);
 
       const xaml = textLabel.toXaml();
       return xaml;
@@ -333,7 +340,7 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     view.heightSpecification = layer.height
     view.layout = new Layout()
     view.layout.cellPadding = layer.itemSpacing
-    view.layout.linaerAligment = 'Center'
+    view.layout.linaerAligment = formatAlignment(layer.primaryAxisAlignItems);
 
     if (layer.backgrounds[0].type == 'SOLID')
       view.backgroundColor = toHex(frameLayer.fills[0].color);
@@ -389,6 +396,32 @@ const formatAlignment = (format: string): string => {
     case "CENTER":
       return 'Center'
     case "MAX":
+      return 'End'
+    default:
+      return ''
+  }
+}
+
+const formatTextVerticalAlignment = (format: string): string => {
+  switch (format) {
+    case "TOP":
+      return 'Top'
+    case "CENTER":
+      return 'Center'
+    case "BOTTOM":
+      return 'Bottom'
+    default:
+      return ''
+  }
+}
+
+const formatTextHorizontalAlignment = (format: string): string => {
+  switch (format) {
+    case "LEFT":
+      return 'Begin'
+    case "CENTER":
+      return 'Center'
+    case "RIGHT":
       return 'End'
     default:
       return ''
