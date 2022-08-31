@@ -138,6 +138,15 @@ class Component {
   }
 }
 
+class Switch extends Component {
+  name: String = "Switch"
+
+  sizeWidth: number
+  sizeHeight: number
+
+  position2D ? : Position
+}
+
 class Button extends Component {
   name: String = "Button"
 
@@ -269,10 +278,25 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
   console.log(layer.type);
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
-    const componentType = instanceNode.mainComponent.name
-    console.log(componentType);
 
-    if (componentType == 'ImageView') {
+    const componentType = instanceNode.mainComponent.parent.type == 'COMPONENT_SET' ? instanceNode.mainComponent.parent.name : instanceNode.mainComponent.name;
+
+    if (componentType == 'Switch') {
+      const switchComponent = new Switch()
+      switchComponent.sizeWidth = instanceNode.width;
+      switchComponent.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        switchComponent.position2D = pos;
+      }
+
+      const xaml = switchComponent.toXaml();
+      return xaml;
+
+    } else if (componentType == 'ImageView') {
       const imageView = new ImageView();
       imageView.sizeWidth = instanceNode.width;
       imageView.sizeHeight = instanceNode.height;
@@ -289,7 +313,6 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       const xaml = imageView.toXaml();
       return xaml;
     } else if (componentType == 'TextLabel') {
-      console.log('TextLabel!!!');
       const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
       const textLabel = new TextLabel()
       textLabel.sizeWidth = instanceNode.width
@@ -300,10 +323,17 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       textLabel.horizontalAlignment = formatTextHorizontalAlignment(textLayer.textAlignHorizontal);
       textLabel.verticalAlignment = formatTextVerticalAlignment(textLayer.textAlignVertical);
 
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        textLabel.position2D = pos;
+      }
+
       const xaml = textLabel.toXaml();
+
       return xaml;
-    } else if (componentType == 'Default') {
-      console.log('kth Button !!!');
+    } else if (componentType == 'Button') {
       console.log(instanceNode)
       const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
 
@@ -314,10 +344,12 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       button.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
       button.textColor = toHex(textLayer.fills[0].color)
 
-      const pos = new Position()
-      pos.x = instanceNode.x;
-      pos.y = instanceNode.y;
-      button.position2D = pos;
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        button.position2D = pos;
+      }
 
       button.backgroundColor = toHex(instanceNode.fills[0].color)
       const radius = new BorderRadius()
@@ -331,7 +363,6 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       return xaml
     }
   } else if (layer.type == 'FRAME') {
-
     console.log(layer);
     const frameLayer: FrameNode = layer as FrameNode;
     const view = new View()
@@ -363,6 +394,7 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     if (layer.parent.type == 'PAGE') {
       view.position2D.x = 0;
       view.position2D.y = 0;
+      parentLayoutType = layer.layoutMode == 'NONE' ? 'ABSOLUTE' : 'LIENAR';
     } else if (layer.parent.type == 'FRAME') {
       view.position2D.x = layer.x;
       view.position2D.y = layer.y;
