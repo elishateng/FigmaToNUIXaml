@@ -279,9 +279,46 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
 
+    console.log(instanceNode.name);
     const componentType = instanceNode.mainComponent.parent.type == 'COMPONENT_SET' ? instanceNode.mainComponent.parent.name : instanceNode.mainComponent.name;
 
-    if (componentType == 'Switch') {
+    if (componentType.search('Card/') == 0) {
+      console.log('find card');
+      const view = new View()
+
+      view.widthSpecification = layer.width
+      view.heightSpecification = layer.height
+      view.layout = new Layout()
+      view.layout.cellPadding = layer.itemSpacing
+      view.layout.linaerAligment = formatAlignment(layer.primaryAxisAlignItems);
+
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        view.position2D = pos;
+      }
+
+      console.log(layer.layoutMode);
+      if (layer.layoutMode == 'VERTICAL') {
+        view.layout.linearOrientation = 'Vertical'
+        view.layout.type = "LINEAR"
+      } else if (layer.layoutMode == 'HORIZONTAL') {
+        view.layout.linearOrientation = 'Horizontal'
+        view.layout.type = "LINEAR"
+      } else {
+        view.layout.type = "ABSOLUTE"
+        //return
+      }
+
+      layer.children.forEach((child) => view.childrenNode.push(child))
+
+      const xaml = view.toXaml(parentLayoutType)
+
+      return xaml
+
+    } else if (componentType == 'Switch') {
       const switchComponent = new Switch()
       switchComponent.sizeWidth = instanceNode.width;
       switchComponent.sizeHeight = instanceNode.height;
@@ -396,9 +433,12 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       view.position2D.y = 0;
       parentLayoutType = layer.layoutMode == 'NONE' ? 'ABSOLUTE' : 'LIENAR';
     } else if (layer.parent.type == 'FRAME') {
-      view.position2D.x = layer.x;
-      view.position2D.y = layer.y;
+
       parentLayoutType = layer.parent.layoutMode == 'NONE' ? 'ABSOLUTE' : 'LIENAR';
+      if (parentLayoutType == 'ABSOLUTE') {
+        view.position2D.x = layer.x;
+        view.position2D.y = layer.y;
+      }
     }
 
     console.log(layer.layoutMode);
