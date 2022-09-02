@@ -21,7 +21,6 @@ import {
   XAML_CS_CODE
 } from './code/code_template';
 
-
 // This shows the HTML page in "ui.html".
 //figma.showUI(__html__, { visible: true, width: 240, height: 160 });
 figma.showUI(__html__, {
@@ -128,14 +127,31 @@ class Component {
 
     let id = uuid();
     let newId = id.replace(/-/gi, '');
-    const componentCode = `
-    <${this.name}
+    const componentCode =
+      `
+      <${this.name}
       x:Name="undefined${newId}"
       ${atttrbuteCodes.join('\n      ')}
-    />`
+      />`
 
     return componentCode
   }
+}
+
+class TextField extends Component {
+  name: String = "TextField"
+
+  sizeWidth: number
+  sizeHeight: number
+  pointSize: number
+  textColor: string
+  borderlineWidth: number
+  borderlineColor: string
+  backgroundColor: string
+  cornerRadius: BorderRadius
+  horizontalAlignment: string
+  verticalAlignment: string
+  position2D ? : Position
 }
 
 class Switch extends Component {
@@ -199,6 +215,7 @@ class View extends Component {
   widthSpecification: number
   heightSpecification: number
   layout: Layout
+  cornerRadius: BorderRadius
   childrenNode: SceneNode[] = []
 
   toXaml(parentLayoutType: string = ''): string {
@@ -213,19 +230,23 @@ class View extends Component {
     })
 
     let backgroundCodeSnippet = ''
-    backgroundCodeSnippet += this.backgroundImage ? `BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `BackgroundColor="${this.backgroundColor}"` : "";
+    backgroundCodeSnippet += this.backgroundImage ? `\n      BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `\n      BackgroundColor="${this.backgroundColor}"` : "";
 
     let layoutCodeSnippet = ''
     layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" LinearAlignment="${this.layout.linaerAligment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />` : `<AbsoluteLayout />`;
 
     let positionCodeSnippet = ''
-    positionCodeSnippet += parentLayoutType == 'ABSOLUTE' ? `Position2D="${this.position2D.toXAML()}"\n      ` : ``;
+    positionCodeSnippet += parentLayoutType == 'ABSOLUTE' ? `\n      Position2D="${this.position2D.toXAML()}"` : ``;
 
-    const componentCode = `<${this.name}
+    let cornerRadiusCodeSnippet = ''
+    cornerRadiusCodeSnippet += this.cornerRadius ? `\n      CornerRadius="${this.cornerRadius.toXAML()}"` : ``;
+
+    const componentCode =
+      `
+      <${this.name}
       x:Name="undefined${newId}"
-      ${positionCodeSnippet}WidthSpecification="${this.widthSpecification}"
-      HeightSpecification="${this.heightSpecification}"
-      ${backgroundCodeSnippet}
+      WidthSpecification="${this.widthSpecification}"
+      HeightSpecification="${this.heightSpecification}"${positionCodeSnippet}${backgroundCodeSnippet}${cornerRadiusCodeSnippet}
       >
       
       <View.Layout>
@@ -233,7 +254,7 @@ class View extends Component {
       </View.Layout>
 
       ${childrenCodeSnippet}
-    </View>`
+      </View>`
 
     return componentCode
   }
@@ -279,7 +300,7 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
   if (layer.type == "INSTANCE") {
     let instanceNode = (layer as InstanceNode)
 
-    console.log(instanceNode.name);
+    console.log(instanceNode);
     const componentType = instanceNode.mainComponent.parent.type == 'COMPONENT_SET' ? instanceNode.mainComponent.parent.name : instanceNode.mainComponent.name;
 
     if (componentType.search('Card/') == 0) {
@@ -318,6 +339,40 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
 
       return xaml
 
+    } else if (componentType == 'TextField') {
+      const textLayer: TextNode = (instanceNode.findOne(child => child.type == 'TEXT') as TextNode)
+
+      const textField = new TextField()
+      textField.sizeWidth = instanceNode.width
+      textField.sizeHeight = instanceNode.height
+      textField.pointSize = parseInt(textLayer.fontSize.toString()) / 6;
+      textField.textColor = toHex(textLayer.fills[0].color)
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        textField.position2D = pos;
+      }
+
+      textField.backgroundColor = toHex(instanceNode.fills[0].color)
+      textField.borderlineColor = toHex(instanceNode.strokes[0].color)
+      textField.borderlineWidth = instanceNode.strokeWeight;
+
+      if (instanceNode.topLeftRadius) {
+        const radius = new BorderRadius()
+        radius.leftTop = instanceNode.topLeftRadius
+        radius.leftBottom = instanceNode.bottomLeftRadius
+        radius.rightBottom = instanceNode.bottomRightRadius
+        radius.rightTop = instanceNode.topRightRadius
+        textField.cornerRadius = radius
+        textField.horizontalAlignment = formatTextHorizontalAlignment(textLayer.textAlignHorizontal);
+        textField.verticalAlignment = formatTextVerticalAlignment(textLayer.textAlignVertical);
+      }
+
+      const xaml = textField.toXaml()
+
+      return xaml
     } else if (componentType == 'Switch') {
       const switchComponent = new Switch()
       switchComponent.sizeWidth = instanceNode.width;
@@ -389,12 +444,16 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       }
 
       button.backgroundColor = toHex(instanceNode.fills[0].color)
-      const radius = new BorderRadius()
-      radius.leftTop = instanceNode.topLeftRadius
-      radius.leftBottom = instanceNode.bottomLeftRadius
-      radius.rightBottom = instanceNode.bottomRightRadius
-      radius.rightTop = instanceNode.topRightRadius
-      button.cornerRadius = radius
+
+      if (instanceNode.topLeftRadius) {
+        const radius = new BorderRadius()
+        radius.leftTop = instanceNode.topLeftRadius
+        radius.leftBottom = instanceNode.bottomLeftRadius
+        radius.rightBottom = instanceNode.bottomRightRadius
+        radius.rightTop = instanceNode.topRightRadius
+        button.cornerRadius = radius
+      }
+
       const xaml = button.toXaml()
 
       return xaml
@@ -410,9 +469,22 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     view.layout.cellPadding = layer.itemSpacing
     view.layout.linaerAligment = formatAlignment(layer.primaryAxisAlignItems);
 
-    if (layer.backgrounds[0].type == 'SOLID')
-      view.backgroundColor = toHex(frameLayer.fills[0].color);
-    else if (layer.backgrounds[0].type == 'IMAGE') {
+    if (layer.topLeftRadius > 0) {
+      const radius = new BorderRadius()
+      radius.leftTop = layer.topLeftRadius
+      radius.leftBottom = layer.bottomLeftRadius
+      radius.rightBottom = layer.bottomRightRadius
+      radius.rightTop = layer.topRightRadius
+      view.cornerRadius = radius
+    }
+
+
+    if (layer.backgrounds[0].type == 'SOLID') {
+      let viewColor: string = toHex(frameLayer.fills[0].color);
+      let opacity: string = (frameLayer.fills[0].opacity * 255 | 0).toString(16);
+      viewColor = viewColor + opacity;
+      view.backgroundColor = viewColor;
+    } else if (layer.backgrounds[0].type == 'IMAGE') {
       layer.children.forEach((childNode) => {
         childNode.visible = false;
       })
