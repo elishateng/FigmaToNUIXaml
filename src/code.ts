@@ -443,7 +443,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
         button.position2D = pos;
       }
 
-      button.backgroundColor = toHex(instanceNode.fills[0].color)
+      //[WillUse] : Default Button Theme 사용으로 주석
+      //button.backgroundColor = toHex(instanceNode.fills[0].color)
 
       if (instanceNode.topLeftRadius) {
         const radius = new BorderRadius()
