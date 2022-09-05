@@ -196,6 +196,7 @@ class TextLabel extends Component {
   textColor: string
   horizontalAlignment: string
   verticalAlignment: string
+  multiLine: string
 
   position2D ? : Position
 }
@@ -414,6 +415,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       textLabel.textColor = toHex(textLayer.fills[0].color);
       textLabel.horizontalAlignment = formatTextHorizontalAlignment(textLayer.textAlignHorizontal);
       textLabel.verticalAlignment = formatTextVerticalAlignment(textLayer.textAlignVertical);
+      //[ToDo] : singleline and multiline 고려
+      textLabel.multiLine = "True";
 
       if (parentLayoutType == 'ABSOLUTE') {
         const pos = new Position()
