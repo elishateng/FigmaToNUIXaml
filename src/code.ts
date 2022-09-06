@@ -154,6 +154,15 @@ class TextField extends Component {
   position2D ? : Position
 }
 
+class CheckBox extends Component {
+  name: String = "CheckBox"
+
+  sizeWidth: number
+  sizeHeight: number
+
+  position2D ? : Position
+}
+
 class Switch extends Component {
   name: String = "Switch"
 
@@ -314,6 +323,36 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       view.layout.cellPadding = layer.itemSpacing
       view.layout.linaerAligment = formatAlignment(layer.primaryAxisAlignItems);
 
+      if (layer.topLeftRadius > 0) {
+        const radius = new BorderRadius()
+        radius.leftTop = layer.topLeftRadius
+        radius.leftBottom = layer.bottomLeftRadius
+        radius.rightBottom = layer.bottomRightRadius
+        radius.rightTop = layer.topRightRadius
+        view.cornerRadius = radius
+      }
+
+      if (layer.backgrounds[0]) {
+        if (layer.backgrounds[0].type == 'SOLID') {
+          let viewColor: string = toHex(layer.fills[0].color);
+          let opacity: string = (layer.fills[0].opacity * 255 | 0).toString(16);
+          viewColor = viewColor + opacity;
+          view.backgroundColor = viewColor;
+        } else if (layer.backgrounds[0].type == 'IMAGE') {
+          layer.children.forEach((childNode) => {
+            childNode.visible = false;
+          })
+          imageNumber++;
+          view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
+          exportXaml(layer, 'image' + imageNumber).then(() => {
+            console.log('exportXaml : ' + XamlExportables.length);
+
+            layer.children.forEach((childNode) => {
+              childNode.visible = true;
+            })
+          });
+        }
+      }
 
       if (parentLayoutType == 'ABSOLUTE') {
         const pos = new Position()
@@ -374,6 +413,21 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       const xaml = textField.toXaml()
 
       return xaml
+    } else if (componentType == 'CheckBox') {
+      const checkBox = new CheckBox()
+      checkBox.sizeWidth = instanceNode.width;
+      checkBox.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        checkBox.position2D = pos;
+      }
+
+      const xaml = checkBox.toXaml();
+      return xaml;
+
     } else if (componentType == 'Switch') {
       const switchComponent = new Switch()
       switchComponent.sizeWidth = instanceNode.width;
@@ -401,6 +455,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
 
       exportXaml(instanceNode, 'image' + imageNumber).then(() => {
         console.log('exportXaml : ' + XamlExportables.length);
+      }).catch(() => {
+        console.log('export failed!')
       });
 
       const xaml = imageView.toXaml();
@@ -482,27 +538,6 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       view.cornerRadius = radius
     }
 
-
-    if (layer.backgrounds[0].type == 'SOLID') {
-      let viewColor: string = toHex(frameLayer.fills[0].color);
-      let opacity: string = (frameLayer.fills[0].opacity * 255 | 0).toString(16);
-      viewColor = viewColor + opacity;
-      view.backgroundColor = viewColor;
-    } else if (layer.backgrounds[0].type == 'IMAGE') {
-      layer.children.forEach((childNode) => {
-        childNode.visible = false;
-      })
-      imageNumber++;
-      view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
-      exportXaml(layer, 'image' + imageNumber).then(() => {
-        console.log('exportXaml : ' + XamlExportables.length);
-
-        layer.children.forEach((childNode) => {
-          childNode.visible = true;
-        })
-      });
-    }
-
     view.position2D = new Position();
     if (layer.parent.type == 'PAGE') {
       view.position2D.x = 0;
@@ -530,6 +565,28 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     }
 
     layer.children.forEach((child) => view.childrenNode.push(child))
+
+    if (layer.backgrounds[0].type == 'SOLID') {
+      let viewColor: string = toHex(frameLayer.fills[0].color);
+      let opacity: string = (frameLayer.fills[0].opacity * 255 | 0).toString(16);
+      viewColor = viewColor + opacity;
+      view.backgroundColor = viewColor;
+    } else if (layer.backgrounds[0].type == 'IMAGE') {
+
+      let cloneLayer = layer.clone();
+      cloneLayer.children.forEach((childNode) => {
+        childNode.visible = false;
+      })
+      imageNumber++;
+      view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
+      exportXaml(cloneLayer, 'image' + imageNumber).then(() => {
+        console.log('exportXaml : ' + XamlExportables.length);
+
+        cloneLayer.children.forEach((childNode) => {
+          childNode.visible = true;
+        })
+      });
+    }
 
     const xaml = view.toXaml(parentLayoutType)
 
@@ -587,7 +644,7 @@ const generateThemeCode = (): string => {
 
   for (let compSet of compSetArray) {
     if (compSet.type === "COMPONENT_SET") {
-      if (compSet.name == 'MyButton') {
+      if (compSet.name == 'Button') {
 
         let themeCode: string = '';
 
@@ -673,7 +730,7 @@ figma.ui.onmessage = msg => {
       filename: xamlCode
     });
   } else if (msg.type == 'exportCode') {
-    console.log('kth exportCode');
+    console.log('exportCode');
 
     //    console.log('global data ' + globalInt);
     //export parent and child components as png file
@@ -681,19 +738,19 @@ figma.ui.onmessage = msg => {
     const nodes = figma.currentPage.selection;
 
     for (const node of nodes) {
-      console.log('kth node type : ' + node.type);
+      console.log('node type : ' + node.type);
       if (node.type === "COMPONENT_SET") {
         const children = node.children;
 
         for(const child of children) {
-          console.log('kth component set child name : ' + child.name);
+          console.log('component set child name : ' + child.name);
 
         }
       }
       else if(node.type === "FRAME") {
         const children = node.children;
         for(const child of children) {
-          console.log('kth frame child name : ' + child.name);
+          console.log('frame child name : ' + child.name);
         }
 
       }
@@ -719,7 +776,7 @@ figma.ui.onmessage = msg => {
     // [WillUse] : 기능후현후 이 함수로 이전 예정
     //exportTheme();
 
-    console.log('kth export theme');
+    console.log('export theme');
 
     const xaml_cs_code = generateThemeCode();
 
