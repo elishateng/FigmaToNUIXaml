@@ -582,9 +582,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       exportXaml(cloneLayer, 'image' + imageNumber).then(() => {
         console.log('exportXaml : ' + XamlExportables.length);
 
-        cloneLayer.children.forEach((childNode) => {
-          childNode.visible = true;
-        })
+        //Remove clone view
+        cloneLayer.remove();
       });
     }
 
