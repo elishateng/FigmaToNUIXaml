@@ -8,11 +8,6 @@ export const XAML_TMPL =
   WidthSpecification="{Static LayoutParamPolicies.MatchParent}"
   HeightSpecification="{Static LayoutParamPolicies.MatchParent}">
 
-    <!-- AppBar is top-side bar with navigation content, title, and action. If you not set any contents, back button is automatically added. -->
-    <ContentPage.AppBar>
-        <AppBar x:Name="appBar" Title="HelloWorldPage"/>
-    </ContentPage.AppBar>
-
     <!-- Content is main placeholder of ContentPage. Add your content into this view. -->
     <ContentPage.Content>
         __CODE__

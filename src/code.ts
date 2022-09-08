@@ -58,6 +58,7 @@ let globalInt: number[] = [];
 let XamlExportables: ExportableBytes[] = [];
 let xamlCode: string = '';
 let imageNumber = 1;
+let xamlCodes: string[] = [];
 
 /*
 const CODE_KEYWORD = '__CODE__'
@@ -716,9 +717,14 @@ figma.ui.onmessage = msg => {
   if (msg.type === 'to-xaml') {
 
     imageNumber = 0;
-    const layer: any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
-    const code = generateComponentCode(layer, 'root')
-    xamlCode = XAML_TMPL.replace(CODE_KEYWORD, code)
+    xamlCodes = [];
+
+    //const layer: any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
+    figma.currentPage.children.forEach((childNode) => {
+      const layer: any = childNode;
+      const code = generateComponentCode(layer, 'root')
+      xamlCodes.push(XAML_TMPL.replace(CODE_KEYWORD, code));
+    })
 
     //const resource = generatedResource
     //const csCode = generatedCSharpCode
@@ -726,7 +732,7 @@ figma.ui.onmessage = msg => {
     figma.ui.postMessage({
       type: 'xaml-code',
       value: XamlExportables,
-      filename: xamlCode
+      layout: xamlCodes
     });
   } else if (msg.type == 'exportCode') {
     console.log('exportCode');
@@ -761,7 +767,7 @@ figma.ui.onmessage = msg => {
     figma.ui.postMessage({
       type: 'exportResults',
       value: XamlExportables,
-      filename: xamlCode
+      layout: xamlCodes
     });
 
     console.log('global data ' + globalInt + ' ' + XamlExportables.length);

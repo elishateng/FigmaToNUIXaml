@@ -14,6 +14,7 @@ declare function require(path: string): any
 
 class App extends React.Component<{}, State> {
   myExportables:ExportableBytes[];
+  myLayouts:string[];
 
   constructor(props: {}) {
     super(props);
@@ -44,6 +45,7 @@ class App extends React.Component<{}, State> {
     if (msg.type === 'exportResults') {
 
       this.myExportables = msg.value;
+      this.myLayouts = msg.layout;
       //let myExportables : ExportableBytes[] = msg.value;
       console.log('kth ui exp: ' + this.myExportables.length);
       console.log('kth win message : export results');
@@ -55,11 +57,16 @@ class App extends React.Component<{}, State> {
         });
         */
 
-        let generatedCode = `${this.state.xamlCode}`;
-        let refinedCode = generatedCode.substring(1);
-
         let zip = new JSZip();
-        zip.file('layout.xaml', refinedCode);
+        let layoutIndex=0;
+
+        for (let data of this.myLayouts) {
+          layoutIndex++;
+          let generatedCode = data;
+          let refinedCode = generatedCode.substring(1);
+          zip.file('layout'+layoutIndex+'.xaml', refinedCode);
+        }
+
         let imgFolder = zip.folder('images');
 
         for (let data of this.myExportables) {
@@ -87,9 +94,7 @@ class App extends React.Component<{}, State> {
         //codeElement.innerText = msg.filename;
         this.myExportables = msg.value;
         console.log('kth ui : ' + this.myExportables.length);
-
-        console.log('kth win mesage : export xaml code');
-        this.applyXamlCode(msg.filename);
+        this.applyXamlCode(msg.layout[0]);
     }
 
     else if (msg.type === 'theme-code' ) {
