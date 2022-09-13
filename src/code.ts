@@ -337,6 +337,9 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
         if (layer.backgrounds[0].type == 'SOLID') {
           let viewColor: string = toHex(layer.fills[0].color);
           let opacity: string = (layer.fills[0].opacity * 255 | 0).toString(16);
+          if (opacity == '0')
+            opacity = '00';
+
           viewColor = viewColor + opacity;
           view.backgroundColor = viewColor;
         } else if (layer.backgrounds[0].type == 'IMAGE') {
