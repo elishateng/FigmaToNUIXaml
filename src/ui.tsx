@@ -5,6 +5,17 @@ import { Select, Button, SectionTitle, TextArea, Input, Text} from 'figma-styled
 import { UISelectOption as Option, UIState as State, ExportableBytes} from "./interfaces";
 import { CONVENTIONS, ORIGINAL } from './constants';
 import { compressExport, toBuffer } from "./ui/exporter";
+import { CODE_VIEW_ID} from './code/template'
+import {
+  CSHARP_SOLUTION_TMPL,
+  CSHARP_MANIFEST_TMPL,
+  CSHARP_PROJECT_TMPL,
+  CSHAP_MAIN_TMPL,
+  CSHARP_MAIN_VIEW_VARIABLES,
+  CSHARP_MAIN_PAGE_SET_CODE,
+  CSHARP_XAML_VIEW_ID,
+  CSHARP_XAML_CS_TMPL
+} from './code/app_template';
 
 import JSZip from 'jszip';
 
@@ -52,41 +63,74 @@ class App extends React.Component<{}, State> {
 
       /*
       compressExport(msg.value, msg.filename)
-        .then(() => {
-          parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
-        });
-        */
+      .then(() => {
+        parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
+      });
+      */
 
-        let zip = new JSZip();
-        let layoutIndex=0;
+      let zip = new JSZip();
+      zip.file('NUIAppSample.sln', CSHARP_SOLUTION_TMPL);
+      let nuiAppSample = zip.folder('NUIAppSample');
 
-        for (let data of this.myLayouts) {
-          layoutIndex++;
-          let generatedCode = data;
-          let refinedCode = generatedCode.substring(1);
-          zip.file('layout'+layoutIndex+'.xaml', refinedCode);
-        }
+      nuiAppSample.file('tizen-manifest.xml', CSHARP_MANIFEST_TMPL.slice(1));
+      nuiAppSample.file('NUIAppSample.csproj', CSHARP_PROJECT_TMPL);
 
-        let imgFolder = zip.folder('images');
+      let xamls = nuiAppSample.folder('xamls');
+      let layoutIndex = 0;
+      let csharp_main_view_variables : string[] = [];
+      let csharp_main_page_set_code : string[] = [];
 
-        for (let data of this.myExportables) {
-          const { name, setting, bytes, blobType, extension } = data;
-          const buffer = toBuffer(bytes);
+      for (let data of this.myLayouts) {
+        layoutIndex++;
+        let generatedCode = data;
+        let refinedCode = generatedCode.substring(1);
+        refinedCode = refinedCode.replace(CODE_VIEW_ID, 'ExportedView' + layoutIndex);
+        xamls.file('ExportedView'+layoutIndex+'.xaml', refinedCode);
 
-          let blob = new Blob([buffer], { type: blobType })
-          imgFolder.file(`${name}${setting.suffix}${extension}`, blob, { base64: true });
-        }
+        let view_id = '/' + CSHARP_XAML_VIEW_ID + '/gi';
+        console.log(view_id);
+        let xaml_cs = CSHARP_XAML_CS_TMPL.replace(/__CSHARP_XAML_VIEW_ID__/gi, 'ExportedView'+layoutIndex);
+        xamls.file('ExportedView'+layoutIndex+'.xaml.cs', xaml_cs);
 
-        zip.generateAsync({ type: 'blob' })
-        .then((content) => {
-          const blobURL = window.URL.createObjectURL(content);
-          const link = document.createElement('a');
-          link.className = 'button button-primary';
-          link.href = blobURL;
-          link.download = `${this.state.fileName}.zip`
-          link.click()
-          link.setAttribute('download', `${this.state.fileName}.zip`);
-        })
+        csharp_main_view_variables.push('private Page ' + 'exportedView' + layoutIndex + ' = null;');
+        csharp_main_page_set_code.push(
+          `
+          ${'exportedView' + layoutIndex} = new ${'ExportedView' + layoutIndex}();
+          currentExample = ${'exportedView' + layoutIndex};
+          navigator.Push(${'exportedView' + layoutIndex});
+          `
+        );
+      }
+
+      let nuiAppSampleMain = CSHAP_MAIN_TMPL;
+      nuiAppSampleMain = nuiAppSampleMain.replace(CSHARP_MAIN_VIEW_VARIABLES, csharp_main_view_variables.join('\n      '));
+      nuiAppSampleMain = nuiAppSampleMain.replace(CSHARP_MAIN_PAGE_SET_CODE, csharp_main_page_set_code.join('\n       '));
+      nuiAppSample.file('NUIAppSample.cs', nuiAppSampleMain);
+
+      let res = nuiAppSample.folder('res');
+      let imgFolder = res.folder('images');
+
+      for (let data of this.myExportables) {
+        const { name, setting, bytes, blobType, extension } = data;
+        const buffer = toBuffer(bytes);
+
+        let blob = new Blob([buffer], { type: blobType })
+        imgFolder.file(`${name}${setting.suffix}${extension}`, blob, { base64: true });
+      }
+
+      let shared = nuiAppSample.folder('shared');
+      let sharedRes = shared.folder('res');
+
+      zip.generateAsync({ type: 'blob' })
+      .then((content) => {
+        const blobURL = window.URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.className = 'button button-primary';
+        link.href = blobURL;
+        link.download = `NUIAppSample.zip`
+        link.click()
+        link.setAttribute('download', `NUIAppSample.zip`);
+      })
     }
     else if (msg.type === 'xaml-code') {
 
@@ -100,21 +144,19 @@ class App extends React.Component<{}, State> {
     else if (msg.type === 'theme-code' ) {
       console.log('[UI] ' + msg.filename);
       let zip = new JSZip();
-        zip.file('DefaultThemeCommon.cs', msg.filename);
+      zip.file('DefaultThemeCommon.cs', msg.filename);
 
-        zip.generateAsync({ type: 'blob' })
-        .then((content) => {
-          const blobURL = window.URL.createObjectURL(content);
-          const link = document.createElement('a');
-          link.className = 'button button-primary';
-          link.href = blobURL;
-          link.download = `DefaultThemeCommon.zip`
-          link.click()
-          link.setAttribute('download', `DefaultThemeCommon.zip`);
-        })
+      zip.generateAsync({ type: 'blob' })
+      .then((content) => {
+        const blobURL = window.URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.className = 'button button-primary';
+        link.href = blobURL;
+        link.download = `DefaultThemeCommon.zip`
+        link.click()
+        link.setAttribute('download', `DefaultThemeCommon.zip`);
+      })
     }
-
-
   }
 
   onSelect(value: string) {
@@ -131,6 +173,23 @@ class App extends React.Component<{}, State> {
     //const pluginMessage = { type: 'export', value: this.state.convention };
     //parent.postMessage({ pluginMessage: pluginMessage }, '*');
   }
+
+  /*
+  ├── NUIAppSample
+  │   ├── NUIAppSample.cs
+  │   ├── NUIAppSample.csproj
+  │   ├── res
+  │   │   └── images
+  │   ├── shared
+  │   │   └── res
+  │   │       └── NUIAppSample.png
+  │   ├── tizen-manifest.xml
+  │   └── xamls
+  │       ├── View1.xaml
+  │       └── View1.xaml.cs
+  ├── NUIAppSample.sln
+  └── README.md
+  */
 
   onExportTheme() {
     const pluginMessage = { type: 'exportTheme' };
@@ -164,11 +223,6 @@ class App extends React.Component<{}, State> {
   }
 
   render() {
-    const defaultOption: Option = { label: ORIGINAL, value: ORIGINAL };
-    const options: Option[] = CONVENTIONS.map(conv => {
-      return { label: conv, value: conv };
-    });
-
     return (
       <>    
         <div id="loader" hidden={!this.state.loading}>
