@@ -127,9 +127,9 @@ class App extends React.Component<{}, State> {
         const link = document.createElement('a');
         link.className = 'button button-primary';
         link.href = blobURL;
-        link.download = `NUIAppSample.zip`
+        link.download = `${this.state.fileName}.zip`
         link.click()
-        link.setAttribute('download', `NUIAppSample.zip`);
+        link.setAttribute('download', `${this.state.fileName}.zip`);
       })
     }
     else if (msg.type === 'xaml-code') {
