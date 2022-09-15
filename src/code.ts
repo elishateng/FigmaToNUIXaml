@@ -400,7 +400,7 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       }
 
       textField.backgroundColor = toHex(instanceNode.fills[0].color)
-      textField.borderlineColor = toHex(instanceNode.strokes[0].color)
+      textField.borderlineColor = toHex((instanceNode.strokes[0] as SolidPaint).color)
       textField.borderlineWidth = instanceNode.strokeWeight;
 
       if (instanceNode.topLeftRadius) {
