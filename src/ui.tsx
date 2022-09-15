@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import { Select, Button, SectionTitle, TextArea, Input, Text} from 'figma-styled-components';
 import { UISelectOption as Option, UIState as State, ExportableBytes} from "./interfaces";
 import { CONVENTIONS, ORIGINAL } from './constants';
-import { compressExport, toBuffer } from "./ui/exporter";
+import { toBuffer } from "./ui/exporter";
 import { CODE_VIEW_ID} from './code/template'
 import {
   CSHARP_SOLUTION_TMPL,
