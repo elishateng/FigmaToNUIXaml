@@ -1,11 +1,16 @@
-export const ORIGINAL   = 'Original';
-export const KEBAB_CASE = 'kebab-case';
-export const SNAKE_CASE = 'snake_case';
-export const CAMEL_CASE = 'camelCase';
+export const PluginUI_InputField_Content   = 'xaml code will be here';
+export const PluginUI_Button_ConvertToNUIXaml   = 'Convert To NUI Xaml';
+export const PluginUI_Button_ExportNUIApplication   = 'Export as NUI Application';
+export const PluginUI_Button_ExportComponentTheme   = 'Export Component as Theme';
 
-export const CONVENTIONS = [
-  ORIGINAL,
-  KEBAB_CASE,
-  SNAKE_CASE,
-  CAMEL_CASE
-];
+//Includes Only Xaml
+export const ConvertingXaml = 'ConvertingXaml'
+export const ConvertedXaml = 'ConvertedXaml'
+
+//Includes Xaml and Pngs
+export const ExportingXaml = 'ExportingCode'
+export const ExportedXaml = 'ExportedCode'
+
+//Includes Component Theme CS File Text
+export const ConvertingTheme = 'ConvertingTheme'
+export const ConvertedTheme = 'ConvertedTheme'

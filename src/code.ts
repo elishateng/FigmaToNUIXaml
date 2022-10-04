@@ -1,6 +1,4 @@
 import {
-  exportAs,
-  exportPNG,
   exportTheme
 } from './code/exporter';
 import {
@@ -21,6 +19,8 @@ import {
   XAML_CS_CODE
 } from './code/code_template';
 
+import  * as PluginConstant  from './constants';
+
 // This shows the HTML page in "ui.html".
 //figma.showUI(__html__, { visible: true, width: 240, height: 160 });
 figma.showUI(__html__, {
@@ -29,61 +29,13 @@ figma.showUI(__html__, {
   title: "FigmaToNUIXamlPlugin"
 });
 
-/*
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the posted message.
-figma.ui.onmessage = async (msg) => {
-  switch (msg.type) {
-  case 'export':
-    figma.notify('Exporting files...');
-    const convention: string = msg.value;
-
-    // Resume after 1 second to allow UI to re-render.
-    setTimeout(() => {
-      exportAs(convention)
-      .then(res => console.log(res));
-    }, 1);
-    break;
-
-  default:
-    console.log('Closing Plugin!');
-    figma.notify('Done!');
-    figma.closePlugin();
-  }
-};
-*/
-
+//Global variables for Xaml Converting
 let mydata: number = 0;
 let globalInt: number[] = [];
 let XamlExportables: ExportableBytes[] = [];
 let xamlCode: string = '';
 let imageNumber = 1;
 let xamlCodes: string[] = [];
-
-/*
-const CODE_KEYWORD = '__CODE__'
-
-const XAML_TMPL = 
-`
-<?xml version="1.0" encoding="UTF-8" ?>
-<ContentPage x:Class="NUITizenGallery.HelloWorldPage"
-  xmlns="http://tizen.org/Tizen.NUI/2018/XAML"
-  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-  WidthSpecification="{Static LayoutParamPolicies.MatchParent}"
-  HeightSpecification="{Static LayoutParamPolicies.MatchParent}">
-
-    <!-- AppBar is top-side bar with navigation content, title, and action. If you not set any contents, back button is automatically added. -->
-    <ContentPage.AppBar>
-        <AppBar x:Name="appBar" Title="HelloWorldPage"/>
-    </ContentPage.AppBar>
-
-    <!-- Content is main placeholder of ContentPage. Add your content into this view. -->
-    <ContentPage.Content>
-        __CODE__
-    </ContentPage.Content>
-</ContentPage>
-`
-*/
 
 figma.showUI(__html__, {
   width: 300,
@@ -475,7 +427,7 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       textLabel.textColor = toHex(textLayer.fills[0].color);
       textLabel.horizontalAlignment = formatTextHorizontalAlignment(textLayer.textAlignHorizontal);
       textLabel.verticalAlignment = formatTextVerticalAlignment(textLayer.textAlignVertical);
-      //[ToDo] : singleline and multiline 고려
+      //[ToDo] : singleline and multiline should be considered here
       textLabel.multiLine = "True";
 
       if (parentLayoutType == 'ABSOLUTE') {
@@ -506,7 +458,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
         button.position2D = pos;
       }
 
-      //[WillUse] : Default Button Theme 사용으로 주석
+      //[WillUse] : button customize function should be implemented later here
+      //ex)
       //button.backgroundColor = toHex(instanceNode.fills[0].color)
 
       if (instanceNode.topLeftRadius) {
@@ -703,8 +656,9 @@ const generateThemeCode = (): string => {
     }
   }
 
+  // Message to Plugin UI
   figma.ui.postMessage({
-    type: 'theme-code',
+    type: PluginConstant.ConvertedTheme,
     value: '',
     filename: themeCSCode
   });
@@ -716,12 +670,14 @@ export function code_ts_function() {
   console.log('my code ts function');
 }
 
+// Messages from Plugin UI
 figma.ui.onmessage = msg => {
-  if (msg.type === 'to-xaml') {
+  if (msg.type === PluginConstant.ConvertingXaml) {
 
     imageNumber = 0;
     xamlCodes = [];
 
+    //For Selected Frame Only
     //const layer: any = (figma.currentPage.selection.length == 1) ? figma.currentPage.selection[0] : null
     figma.currentPage.children.forEach((childNode) => {
       const layer: any = childNode;
@@ -729,65 +685,25 @@ figma.ui.onmessage = msg => {
       xamlCodes.push(XAML_TMPL.replace(CODE_KEYWORD, code));
     })
 
-    //const resource = generatedResource
-    //const csCode = generatedCSharpCode
-
+    // Message to Plugin UI
     figma.ui.postMessage({
-      type: 'xaml-code',
+      type: PluginConstant.ConvertedXaml,
       value: XamlExportables,
       layout: xamlCodes
     });
-  } else if (msg.type == 'exportCode') {
-    console.log('exportCode');
+  } else if (msg.type == PluginConstant.ExportingXaml) {
 
-    //    console.log('global data ' + globalInt);
-    //export parent and child components as png file
-    /*
-    const nodes = figma.currentPage.selection;
-
-    for (const node of nodes) {
-      console.log('node type : ' + node.type);
-      if (node.type === "COMPONENT_SET") {
-        const children = node.children;
-
-        for(const child of children) {
-          console.log('component set child name : ' + child.name);
-
-        }
-      }
-      else if(node.type === "FRAME") {
-        const children = node.children;
-        for(const child of children) {
-          console.log('frame child name : ' + child.name);
-        }
-
-      }
-    }
-    */
-
-    //exportPNG(globalInt);
-
+    // Message from Plugin UI
     figma.ui.postMessage({
-      type: 'exportResults',
+      type: PluginConstant.ExportedXaml,
       value: XamlExportables,
       layout: xamlCodes
     });
-
-    console.log('global data ' + globalInt + ' ' + XamlExportables.length);
-
-    //exportAs('Original')
-    //const nodes = figma.currentPage.selection;
-  } else if (msg.type == 'exportTheme') {
-    // [WillUse] : 셀렉션 컴포넌트 이미지 Export
-    //exportPNG(globalInt);
-
-    // [WillUse] : 기능후현후 이 함수로 이전 예정
+  } else if (msg.type == PluginConstant.ConvertingTheme) {
+    // [WillUse] : NUI Components Theme Export
+    // [WillUse] : genertedThemeCode shoulde be moved later
     //exportTheme();
-
-    console.log('export theme');
-
     const xaml_cs_code = generateThemeCode();
-
   } else {
     figma.notify('Done!');
   }

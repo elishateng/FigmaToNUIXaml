@@ -1,11 +1,5 @@
-export interface UISelectOption {
-    label: string;
-    value: string;
-  }
-  
   export interface UIState {
     loading: boolean;
-    convention: string;
     xamlCode: string;
     fileName: string;
   }

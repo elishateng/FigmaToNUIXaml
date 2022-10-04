@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import JSZip from 'jszip';
+import './style.css';
 
 import { Select, Button, SectionTitle, TextArea, Input, Text} from 'figma-styled-components';
-import { UISelectOption as Option, UIState as State, ExportableBytes} from "./interfaces";
-import { CONVENTIONS, ORIGINAL } from './constants';
+import { UIState as State, ExportableBytes} from "./interfaces";
+import  * as PluginConstant  from './constants';
 import { toBuffer } from "./ui/exporter";
 import { CODE_VIEW_ID} from './code/template'
 import {
@@ -17,10 +19,6 @@ import {
   CSHARP_XAML_CS_TMPL
 } from './code/app_template';
 
-import JSZip from 'jszip';
-
-import './style.css';
-
 declare function require(path: string): any
 
 class App extends React.Component<{}, State> {
@@ -32,12 +30,11 @@ class App extends React.Component<{}, State> {
 
     this.state = {
       loading: false,
-      convention: ORIGINAL,
-      xamlCode: 'xaml code will be here',
+      xamlCode: PluginConstant.PluginUI_InputField_Content,
       fileName: ''
     }
 
-    this.onSelect = this.onSelect.bind(this);
+    this.onToXaml = this.onToXaml.bind(this);
     this.onExportApplication = this.onExportApplication.bind(this);
     this.onExportTheme = this.onExportTheme.bind(this);
     this.onFileNameChanged = this.onFileNameChanged.bind(this);
@@ -48,25 +45,19 @@ class App extends React.Component<{}, State> {
     this.setState({xamlCode : value});
   }
 
+  // Messages from Figma Sandbox
   handleMessage(event) {
     const msg = event.data.pluginMessage;
     if (!msg) return;
   
     //[Figma UI : Exports Project]
-    if (msg.type === 'exportResults') {
+    if (msg.type === PluginConstant.ExportedXaml) {
 
       this.myExportables = msg.value;
       this.myLayouts = msg.layout;
-      //let myExportables : ExportableBytes[] = msg.value;
-      console.log('kth ui exp: ' + this.myExportables.length);
-      console.log('kth win message : export results');
 
-      /*
-      compressExport(msg.value, msg.filename)
-      .then(() => {
-        parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
-      });
-      */
+      // console.log('length : ' + this.myExportables.length);
+      // console.log('win message : export results');
 
       let zip = new JSZip();
       zip.file('NUIAppSample.sln', CSHARP_SOLUTION_TMPL);
@@ -132,16 +123,12 @@ class App extends React.Component<{}, State> {
         link.setAttribute('download', `${this.state.fileName}.zip`);
       })
     }
-    else if (msg.type === 'xaml-code') {
-
-        //const codeElement = document.getElementById('mytextarea');
-        //codeElement.innerText = msg.filename;
+    else if (msg.type === PluginConstant.ConvertedXaml) {
         this.myExportables = msg.value;
-        console.log('kth ui : ' + this.myExportables.length);
         this.applyXamlCode(msg.layout[0]);
     }
 
-    else if (msg.type === 'theme-code' ) {
+    else if (msg.type === PluginConstant.ConvertedTheme ) {
       console.log('[UI] ' + msg.filename);
       let zip = new JSZip();
       zip.file('DefaultThemeCommon.cs', msg.filename);
@@ -159,20 +146,6 @@ class App extends React.Component<{}, State> {
     }
   }
 
-  onSelect(value: string) {
-  }
-
-  onTextChange(value : string) {
-      console.log('kth text area is changed!');
-  }
-
-  onExportApplication() {
-    const pluginMessage = { type: 'exportCode' };
-    parent.postMessage({ pluginMessage: pluginMessage }, '*');
-    //this.setState({ loading: true });
-    //const pluginMessage = { type: 'export', value: this.state.convention };
-    //parent.postMessage({ pluginMessage: pluginMessage }, '*');
-  }
 
   /*
   ├── NUIAppSample
@@ -191,12 +164,26 @@ class App extends React.Component<{}, State> {
   └── README.md
   */
 
+  onTextChange(value : string) {
+    console.log('Text area is changed!');
+  }
+
+  onFileNameChanged(event : any) {
+    this.setState({fileName : event.target.value});
+  }
+
+  // Messages to Figma Sandbox
+  onExportApplication() {
+    //this.setState({ loading: true });
+    const pluginMessage = { type: PluginConstant.ExportingXaml };
+    parent.postMessage({ pluginMessage: pluginMessage }, '*');
+  }
+
   onExportTheme() {
-    const pluginMessage = { type: 'exportTheme' };
+    const pluginMessage = { type: PluginConstant.ConvertingTheme };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
 
-
-    // [WillUse] : 로컬 서버 커넥트
+    // [WillUse] : local app server connect test
     /*
     fetch('http://localhost:8080/build', {
       method: 'POST', // or 'PUT'
@@ -209,17 +196,11 @@ class App extends React.Component<{}, State> {
       return res.json();
     });
     */
-
   }
 
   onToXaml() {
-    const pluginMessage = { type: 'to-xaml' };
+    const pluginMessage = { type: PluginConstant.ConvertingXaml };
     parent.postMessage({ pluginMessage: pluginMessage }, '*');
-  }
-
-  onFileNameChanged(event : any) {
-    //console.log(event.target.value);
-    this.setState({fileName : event.target.value});
   }
 
   render() {
@@ -232,11 +213,11 @@ class App extends React.Component<{}, State> {
         <div hidden={this.state.loading}>
           <SectionTitle id="title">Result</SectionTitle>
           <TextArea id="xamlCodeArea" value = {this.state.xamlCode} onChange={this.onTextChange}/>
-          <Button id="export" fullWidth variant="secondary" onClick={this.onToXaml}>Convert to NUI Xaml</Button>
+          <Button id="export" fullWidth variant="secondary" onClick={this.onToXaml}>{PluginConstant.PluginUI_Button_ConvertToNUIXaml}</Button>
           <Text id="text"> File Name : </Text>
           <input id="input" onChange={this.onFileNameChanged}/>
-          <Button id="export" variant="secondary" fullWidth onClick={this.onExportApplication}>Export as NUI Application</Button>
-          <Button id="export" variant="secondary" fullWidth onClick={this.onExportTheme}>Export Component as Theme</Button>
+          <Button id="export" variant="secondary" fullWidth onClick={this.onExportApplication}>{PluginConstant.PluginUI_Button_ExportNUIApplication}</Button>
+          <Button id="export" variant="secondary" fullWidth onClick={this.onExportTheme}>{PluginConstant.PluginUI_Button_ExportComponentTheme}</Button>
         </div>
       </>
     );
