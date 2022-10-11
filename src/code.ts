@@ -21,9 +21,6 @@ import {
 
 import  * as PluginConstant  from './constants';
 
-// This shows the HTML page in "ui.html".
-//figma.showUI(__html__, { visible: true, width: 240, height: 160 });
-
 //Global variables for Xaml Converting
 let mydata: number = 0;
 let globalInt: number[] = [];
@@ -32,6 +29,7 @@ let xamlCode: string = '';
 let imageNumber = 1;
 let xamlCodes: string[] = [];
 
+//This shows the HTML page in "ui.html".
 figma.showUI(__html__, {
   width: 300,
   height: 450,
