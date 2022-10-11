@@ -133,6 +133,16 @@ class Button extends Component {
   position2D ? : Position
 }
 
+class Progress extends Component {
+  name: String = "Progress"
+
+  sizeWidth: number
+  sizeHeight: number
+  currentValue: number
+
+  position2D ? : Position
+}
+
 class ImageView extends Component {
   name: String = "ImageView"
   sizeWidth: number
@@ -392,6 +402,25 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       const xaml = switchComponent.toXaml();
       return xaml;
 
+    } else if (componentType == 'Progress') {
+      const progress = new Progress();
+      progress.sizeWidth = instanceNode.width;
+      progress.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        progress.position2D = pos;
+      }
+
+      const bar: RectangleNode = (instanceNode.findOne(child => child.name == 'Progress') as RectangleNode)
+      const buffer: RectangleNode = (instanceNode.findOne(child => child.name == 'Buffer') as RectangleNode)
+
+      progress.currentValue = (bar.width / buffer.width) * 100
+
+      const xaml = progress.toXaml();
+      return xaml;
     } else if (componentType == 'ImageView') {
       const imageView = new ImageView();
       imageView.sizeWidth = instanceNode.width;
