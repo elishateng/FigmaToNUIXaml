@@ -23,11 +23,6 @@ import  * as PluginConstant  from './constants';
 
 // This shows the HTML page in "ui.html".
 //figma.showUI(__html__, { visible: true, width: 240, height: 160 });
-figma.showUI(__html__, {
-  width: 300,
-  height: 450,
-  title: "FigmaToNUIXamlPlugin"
-});
 
 //Global variables for Xaml Converting
 let mydata: number = 0;
