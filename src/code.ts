@@ -19,7 +19,7 @@ import {
   XAML_CS_CODE
 } from './code/code_template';
 
-import  * as PluginConstant  from './constants';
+import * as PluginConstant from './constants';
 
 //Global variables for Xaml Converting
 let mydata: number = 0;
