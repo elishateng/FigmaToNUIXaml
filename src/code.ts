@@ -143,6 +143,16 @@ class Progress extends Component {
   position2D ? : Position
 }
 
+class Slider extends Component {
+  name: String = "Slider"
+
+  sizeWidth: number
+  sizeHeight: number
+  currentValue: number
+
+  position2D ? : Position
+}
+
 class ImageView extends Component {
   name: String = "ImageView"
   sizeWidth: number
@@ -420,6 +430,25 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       progress.currentValue = (bar.width / buffer.width) * 100
 
       const xaml = progress.toXaml();
+      return xaml;
+    } else if (componentType == 'Slider') {
+      const slider = new Slider();
+      slider.sizeWidth = instanceNode.width;
+      slider.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        slider.position2D = pos;
+      }
+
+      const thumb: RectangleNode = (instanceNode.findOne(child => child.name == 'Progress') as RectangleNode)
+      const track: RectangleNode = (instanceNode.findOne(child => child.name == 'Track') as RectangleNode)
+
+      slider.currentValue = (thumb.width / track.width) * 100
+
+      const xaml = slider.toXaml();
       return xaml;
     } else if (componentType == 'ImageView') {
       const imageView = new ImageView();
