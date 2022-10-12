@@ -133,6 +133,24 @@ class Button extends Component {
   position2D ? : Position
 }
 
+class DatePicker extends Component {
+  name: String = "DatePicker"
+
+  sizeWidth: number
+  sizeHeight: number
+
+  position2D ? : Position
+}
+
+class TimePicker extends Component {
+  name: String = "TimePicker"
+
+  sizeWidth: number
+  sizeHeight: number
+
+  position2D ? : Position
+}
+
 class Progress extends Component {
   name: String = "Progress"
 
@@ -430,6 +448,34 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       progress.currentValue = (bar.width / buffer.width) * 100
 
       const xaml = progress.toXaml();
+      return xaml;
+    } else if (componentType == 'DatePicker') {
+      const datePicker = new DatePicker();
+      datePicker.sizeWidth = instanceNode.width;
+      datePicker.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        datePicker.position2D = pos;
+      }
+
+      const xaml = datePicker.toXaml();
+      return xaml;
+    } else if (componentType == 'TimePicker') {
+      const timePicker = new TimePicker();
+      timePicker.sizeWidth = instanceNode.width;
+      timePicker.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        timePicker.position2D = pos;
+      }
+
+      const xaml = timePicker.toXaml();
       return xaml;
     } else if (componentType == 'Slider') {
       const slider = new Slider();
