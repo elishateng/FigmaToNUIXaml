@@ -257,6 +257,53 @@ class View extends Component {
   }
 }
 
+class ScrollableBase extends View {
+  name: string = "ScrollableBase"
+  scrollDirection: string
+
+  toXaml(parentLayoutType: string = ''): string {
+
+    let id = uuid();
+    let newId = id.replace(/-/gi, '');
+    let childrenCodeSnippet = ''
+    this.childrenNode.forEach((childNode) => {
+      const code = generateComponentCode(childNode, parentLayoutType)
+      if (!code) return
+      childrenCodeSnippet += code + '\n'
+    })
+
+    let backgroundCodeSnippet = ''
+    backgroundCodeSnippet += this.backgroundImage ? `\n      BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `\n      BackgroundColor="${this.backgroundColor}"` : "";
+
+    let layoutCodeSnippet = ''
+    layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" VerticalAlignment="${this.layout.verticalAligment}" HorizontalAlignment="${this.layout.horizontalAlignment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" Padding="${this.layout.horizontalPadding},${this.layout.horizontalPadding},${this.layout.verticalPadding},${this.layout.verticalPadding}"/>` : `<AbsoluteLayout />`;
+
+    let positionCodeSnippet = ''
+    positionCodeSnippet += parentLayoutType == 'ABSOLUTE' ? `\n      Position2D="${this.position2D.toXAML()}"` : ``;
+
+    let cornerRadiusCodeSnippet = ''
+    cornerRadiusCodeSnippet += this.cornerRadius ? `\n      CornerRadius="${this.cornerRadius.toXAML()}"` : ``;
+
+    const componentCode =
+      `
+      <${this.name}
+      x:Name="undefined${newId}"
+      WidthSpecification="${this.widthSpecification}"
+      HeightSpecification="${this.heightSpecification}"${positionCodeSnippet}${backgroundCodeSnippet}${cornerRadiusCodeSnippet}
+      ScrollingDirection="${this.scrollDirection}"
+      >
+
+      <ScrollableBase.Layout>
+        ${layoutCodeSnippet}
+      </ScrollableBase.Layout>
+
+      ${childrenCodeSnippet}
+      </ScrollableBase>`
+
+    return componentCode
+  }
+}
+
 const NUI_COMPONENTS = {
   'Button': Button,
   'View': View,
@@ -311,8 +358,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       view.layout.cellPadding = layer.itemSpacing
       view.layout.verticalAligment = formatVerticalAlignment(layer.layoutMode == 'VERTICAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
       view.layout.horizontalAlignment = formatHorizontalAlignment(layer.layoutMode == 'HORIZONTAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
-      view.layout.horizontalPadding = layer.horizontalPadding;
-      view.layout.verticalPadding = layer.verticalPadding;
+      view.layout.horizontalPadding = layer.paddingLeft;
+      view.layout.verticalPadding = layer.paddingTop;
 
       if (layer.topLeftRadius > 0) {
         const radius = new BorderRadius()
@@ -581,7 +628,17 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     }
   } else if (layer.type == 'FRAME') {
     const frameLayer: FrameNode = layer as FrameNode;
-    const view = new View()
+    console.log('kth Frame Name : ' + layer.name)
+    console.log(layer);
+
+    let view = layer.overflowDirection == 'NONE' ? new View() : new ScrollableBase();
+
+    console.log('kth ' + view.name + ' ' + layer.overflowDirection)
+
+    if (layer.overflowDirection != 'NONE') {
+      let scroller: ScrollableBase = view as ScrollableBase;
+      scroller.scrollDirection = layer.overflowDirection == 'VERTICAL' ? 'Vertical' : 'Horizontal';
+    }
 
     view.widthSpecification = layer.width
     view.heightSpecification = layer.height
@@ -589,8 +646,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     view.layout.cellPadding = layer.itemSpacing
     view.layout.verticalAligment = formatVerticalAlignment(layer.layoutMode == 'VERTICAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
     view.layout.horizontalAlignment = formatHorizontalAlignment(layer.layoutMode == 'HORIZONTAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
-    view.layout.horizontalPadding = layer.horizontalPadding;
-    view.layout.verticalPadding = layer.verticalPadding;
+    view.layout.horizontalPadding = layer.paddingLeft;
+    view.layout.verticalPadding = layer.paddingTop;
 
     if (layer.topLeftRadius > 0) {
       const radius = new BorderRadius()
