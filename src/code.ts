@@ -200,6 +200,8 @@ class Layout {
   verticalAligment: string
   horizontalAlignment: string
   cellPadding: number = 0
+  horizontalPadding: number = 0
+  verticalPadding: number = 0
 }
 
 class View extends Component {
@@ -228,7 +230,7 @@ class View extends Component {
     backgroundCodeSnippet += this.backgroundImage ? `\n      BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `\n      BackgroundColor="${this.backgroundColor}"` : "";
 
     let layoutCodeSnippet = ''
-    layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" VerticalAlignment="${this.layout.verticalAligment}" HorizontalAlignment="${this.layout.horizontalAlignment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />` : `<AbsoluteLayout />`;
+    layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" VerticalAlignment="${this.layout.verticalAligment}" HorizontalAlignment="${this.layout.horizontalAlignment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" Padding="${this.layout.horizontalPadding},${this.layout.horizontalPadding},${this.layout.verticalPadding},${this.layout.verticalPadding}"/>` : `<AbsoluteLayout />`;
 
     let positionCodeSnippet = ''
     positionCodeSnippet += parentLayoutType == 'ABSOLUTE' ? `\n      Position2D="${this.position2D.toXAML()}"` : ``;
@@ -309,6 +311,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       view.layout.cellPadding = layer.itemSpacing
       view.layout.verticalAligment = formatVerticalAlignment(layer.layoutMode == 'VERTICAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
       view.layout.horizontalAlignment = formatHorizontalAlignment(layer.layoutMode == 'HORIZONTAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
+      view.layout.horizontalPadding = layer.horizontalPadding;
+      view.layout.verticalPadding = layer.verticalPadding;
 
       if (layer.topLeftRadius > 0) {
         const radius = new BorderRadius()
@@ -585,6 +589,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     view.layout.cellPadding = layer.itemSpacing
     view.layout.verticalAligment = formatVerticalAlignment(layer.layoutMode == 'VERTICAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
     view.layout.horizontalAlignment = formatHorizontalAlignment(layer.layoutMode == 'HORIZONTAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
+    view.layout.horizontalPadding = layer.horizontalPadding;
+    view.layout.verticalPadding = layer.verticalPadding;
 
     if (layer.topLeftRadius > 0) {
       const radius = new BorderRadius()
