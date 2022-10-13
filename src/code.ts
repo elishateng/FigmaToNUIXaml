@@ -197,7 +197,8 @@ class TextLabel extends Component {
 class Layout {
   type: string
   linearOrientation: string
-  linaerAligment: string
+  verticalAligment: string
+  horizontalAlignment: string
   cellPadding: number = 0
 }
 
@@ -227,7 +228,7 @@ class View extends Component {
     backgroundCodeSnippet += this.backgroundImage ? `\n      BackgroundImage="${this.backgroundImage}"` : this.backgroundColor ? `\n      BackgroundColor="${this.backgroundColor}"` : "";
 
     let layoutCodeSnippet = ''
-    layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" LinearAlignment="${this.layout.linaerAligment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />` : `<AbsoluteLayout />`;
+    layoutCodeSnippet += this.layout.type == 'LINEAR' ? `<LinearLayout LinearOrientation="${this.layout.linearOrientation}" VerticalAlignment="${this.layout.verticalAligment}" HorizontalAlignment="${this.layout.horizontalAlignment}" CellPadding="${this.layout.cellPadding},${this.layout.cellPadding}" />` : `<AbsoluteLayout />`;
 
     let positionCodeSnippet = ''
     positionCodeSnippet += parentLayoutType == 'ABSOLUTE' ? `\n      Position2D="${this.position2D.toXAML()}"` : ``;
@@ -299,13 +300,15 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
 
     if (componentType.search('Card/') == 0) {
       console.log('find card');
+      console.log(instanceNode);
       const view = new View()
 
       view.widthSpecification = layer.width
       view.heightSpecification = layer.height
       view.layout = new Layout()
       view.layout.cellPadding = layer.itemSpacing
-      view.layout.linaerAligment = formatAlignment(layer.primaryAxisAlignItems);
+      view.layout.verticalAligment = formatVerticalAlignment(layer.layoutMode == 'VERTICAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
+      view.layout.horizontalAlignment = formatHorizontalAlignment(layer.layoutMode == 'HORIZONTAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
 
       if (layer.topLeftRadius > 0) {
         const radius = new BorderRadius()
@@ -573,7 +576,6 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       return xaml
     }
   } else if (layer.type == 'FRAME') {
-    console.log(layer);
     const frameLayer: FrameNode = layer as FrameNode;
     const view = new View()
 
@@ -581,7 +583,8 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
     view.heightSpecification = layer.height
     view.layout = new Layout()
     view.layout.cellPadding = layer.itemSpacing
-    view.layout.linaerAligment = formatAlignment(layer.primaryAxisAlignItems);
+    view.layout.verticalAligment = formatVerticalAlignment(layer.layoutMode == 'VERTICAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
+    view.layout.horizontalAlignment = formatHorizontalAlignment(layer.layoutMode == 'HORIZONTAL' ? layer.primaryAxisAlignItems : layer.counterAxisAlignItems);
 
     if (layer.topLeftRadius > 0) {
       const radius = new BorderRadius()
@@ -620,25 +623,27 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
 
     layer.children.forEach((child) => view.childrenNode.push(child))
 
-    if (layer.backgrounds[0].type == 'SOLID') {
-      let viewColor: string = toHex(frameLayer.fills[0].color);
-      let opacity: string = (frameLayer.fills[0].opacity * 255 | 0).toString(16);
-      viewColor = viewColor + opacity;
-      view.backgroundColor = viewColor;
-    } else if (layer.backgrounds[0].type == 'IMAGE') {
+    if (layer.backgrounds.length > 0) {
+      if (layer.backgrounds[0].type == 'SOLID') {
+        let viewColor: string = toHex(frameLayer.fills[0].color);
+        let opacity: string = (frameLayer.fills[0].opacity * 255 | 0).toString(16);
+        viewColor = viewColor + opacity;
+        view.backgroundColor = viewColor;
+      } else if (layer.backgrounds[0].type == 'IMAGE') {
 
-      let cloneLayer = layer.clone();
-      cloneLayer.children.forEach((childNode) => {
-        childNode.visible = false;
-      })
-      imageNumber++;
-      view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
-      exportXaml(cloneLayer, 'image' + imageNumber).then(() => {
-        console.log('exportXaml : ' + XamlExportables.length);
+        let cloneLayer = layer.clone();
+        cloneLayer.children.forEach((childNode) => {
+          childNode.visible = false;
+        })
+        imageNumber++;
+        view.backgroundImage = "*Resource*/images/image" + imageNumber + ".png";
+        exportXaml(cloneLayer, 'image' + imageNumber).then(() => {
+          console.log('exportXaml : ' + XamlExportables.length);
 
-        //Remove clone view
-        cloneLayer.remove();
-      });
+          //Remove clone view
+          cloneLayer.remove();
+        });
+      }
     }
 
     const xaml = view.toXaml(parentLayoutType)
@@ -647,7 +652,7 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
   }
 }
 
-const formatAlignment = (format: string): string => {
+const formatHorizontalAlignment = (format: string): string => {
   switch (format) {
     case "MIN":
       return 'Begin'
@@ -655,6 +660,19 @@ const formatAlignment = (format: string): string => {
       return 'Center'
     case "MAX":
       return 'End'
+    default:
+      return ''
+  }
+}
+
+const formatVerticalAlignment = (format: string): string => {
+  switch (format) {
+    case "MIN":
+      return 'Top'
+    case "CENTER":
+      return 'Center'
+    case "MAX":
+      return 'Bottom'
     default:
       return ''
   }
@@ -717,8 +735,8 @@ const generateThemeCode = (): string => {
           `
           Size = new Size(${compDefault.width}, ${compDefault.height}),
           CornerRadius = ${compDefault.cornerRadius as number},
-          ItemHorizontalAlignment = HorizontalAlignment.${formatAlignment(compDefault.primaryAxisAlignItems)},
-          ItemVerticalAlignment = VerticalAlignment.${formatAlignment(compDefault.counterAxisAlignItems)},
+          ItemHorizontalAlignment = HorizontalAlignment.${formatHorizontalAlignment(compDefault.primaryAxisAlignItems)},
+          ItemVerticalAlignment = VerticalAlignment.${formatVerticalAlignment(compDefault.counterAxisAlignItems)},
 
           BackgroundColor = new Selector<Color>()
           {
