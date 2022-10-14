@@ -151,6 +151,12 @@ class TimePicker extends Component {
   position2D ? : Position
 }
 
+class Loading extends Component {
+  name: String = "Loading"
+
+  position2D ? : Position
+}
+
 class Progress extends Component {
   name: String = "Progress"
 
@@ -487,6 +493,18 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       const xaml = switchComponent.toXaml();
       return xaml;
 
+    } else if (componentType == 'Loading') {
+      const loading = new Loading();
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        loading.position2D = pos;
+      }
+
+      const xaml = loading.toXaml();
+      return xaml;
     } else if (componentType == 'Progress') {
       const progress = new Progress();
       progress.sizeWidth = instanceNode.width;
