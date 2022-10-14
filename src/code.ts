@@ -176,6 +176,8 @@ class ImageView extends Component {
   sizeWidth: number
   sizeHeight: number
   resourceUrl: ResourceUrl
+
+  position2D ? : Position
 }
 
 class TextLabel extends Component {
@@ -554,6 +556,13 @@ const generateComponentCode = (layer: SceneNode, parentLayoutType: string = ''):
       const imageView = new ImageView();
       imageView.sizeWidth = instanceNode.width;
       imageView.sizeHeight = instanceNode.height;
+
+      if (parentLayoutType == 'ABSOLUTE') {
+        const pos = new Position()
+        pos.x = instanceNode.x;
+        pos.y = instanceNode.y;
+        imageView.position2D = pos;
+      }
 
       imageNumber++;
       const url = new ResourceUrl();
