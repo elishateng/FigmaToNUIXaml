@@ -31,7 +31,7 @@ let xamlCodes: string[] = [];
 
 //This shows the HTML page in "ui.html".
 figma.showUI(__html__, {
-  width: 300,
+  width: 550,
   height: 450,
   title: "FigmaToNUIXamlPlugin"
 });
