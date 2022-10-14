@@ -293,6 +293,7 @@ class ScrollableBase extends View {
       WidthSpecification="${this.widthSpecification}"
       HeightSpecification="${this.heightSpecification}"${positionCodeSnippet}${backgroundCodeSnippet}${cornerRadiusCodeSnippet}
       ScrollingDirection="${this.scrollDirection}"
+      HideScrollbar="false"
       >
 
       <ScrollableBase.Layout>
