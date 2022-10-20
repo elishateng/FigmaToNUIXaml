@@ -218,6 +218,7 @@ class App extends React.Component<{}, State> {
           <input id="input" onChange={this.onFileNameChanged}/>
           <Button id="export" variant="secondary" fullWidth onClick={this.onExportApplication}>{PluginConstant.PluginUI_Button_ExportNUIApplication}</Button>
           <Button id="export" variant="secondary" fullWidth onClick={this.onExportTheme}>{PluginConstant.PluginUI_Button_ExportComponentTheme}</Button>
+          <img id ="text_logo" src={'https://www.tizen.org/sites/default/files/admins/tizen-branding-logo-on-light.png'} />
         </div>
       </>
     );
